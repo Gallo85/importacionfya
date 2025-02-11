@@ -1,0 +1,107 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary text-left">📊 Total de Ventas</h1>
+
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm">
+            <thead class="table-primary text-center">
+                <tr>
+                    <th>Factura #</th>
+                    <th>Cliente</th>
+                    <th class="text-end">Total Factura</th>
+                    <th class="text-end text-danger">Monto N.C.</th>
+                    <th class="text-end text-warning">Dólar Compra</th>
+                    <th class="text-center">Método de Pago</th>
+                    <th class="text-end">Fecha Factura</th>
+                    <th class="text-center">N.C.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for factura in facturas %}
+                    <tr class="text-center">
+                        <td>{{ factura.id }}</td>
+                        <td>{{ factura.cliente.nombre }} {{ factura.cliente.apellido }}</td>
+                        <td class="text-end text-primary fw-bold">${{ factura.total|floatformat:2|intcomma }}</td>
+                        <td class="text-end text-danger fw-bold">
+                            {% if factura.tiene_nc %}
+                                - ${{ factura.monto_nc|floatformat:2|intcomma }}
+                            {% else %}
+                                $0,00
+                            {% endif %}
+                        </td>
+                        <td class="text-end text-warning fw-bold">${{ factura.dolar_venta|floatformat:2|intcomma }}</td>
+                        <td class="text-center">
+                            {% if factura.metodo_pago == "Pesos" %}
+                                <span class="badge bg-primary">Pesos</span>
+                            {% elif factura.metodo_pago == "Dólares" %}
+                                <span class="badge bg-success">Dólares</span>
+                            {% else %}
+                                <span class="badge bg-warning">Mixto</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">{{ factura.fecha|date:"d/m/Y H:i" }}</td>
+                        <td class="text-center">
+                            {% if factura.tiene_nc %}
+                                <span class="text-danger" title="Tiene Nota de Crédito">📝</span>
+                            {% else %}
+                                <span class="text-success" title="No tiene Nota de Crédito">✔</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-3">No hay facturas registradas.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="bg-light fw-bold text-center">
+                    <td colspan="2" class="text-end">💰 Total de Ventas Ajustado:</td>
+                    <td class="text-end text-primary">${{ total_ventas|floatformat:2|intcomma }}</td>
+                    <td colspan="5"></td>  <!-- Espacio vacío para mantener formato -->
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- 🔹 Paginación -->
+    {% if facturas.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if facturas.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">« Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ facturas.previous_page_number }}">‹ Anterior</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                    <span class="page-link">Página {{ facturas.number }} de {{ facturas.paginator.num_pages }}</span>
+                </li>
+
+                {% if facturas.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ facturas.next_page_number }}">Siguiente ›</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ facturas.paginator.num_pages }}">Última »</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+    <!-- 🔹 Fin de Paginación -->
+
+</div>
+{% endblock %}
+
+
+
+
+
+

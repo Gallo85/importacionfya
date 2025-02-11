@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprimir Descripción</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+        .details {
+            margin-top: 20px;
+        }
+        .details li {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+        .details strong {
+            font-weight: bold;
+        }
+        .buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .buttons a, .buttons button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 5px;
+            display: inline-block;
+        }
+        .buttons a:hover, .buttons button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <h1>Descripción del Producto</h1>
+    <div class="container">
+        <ul class="details">
+            <li><strong>Modelo:</strong> {{ producto.modelo }}</li>
+            <li><strong>Color:</strong> {{ producto.color }}</li>
+            <li><strong>Estado:</strong> {{ producto.estado }}</li>
+            {% if tipo == "iphone" %}
+                <li><strong>IMEI:</strong> {{ producto.imei }}</li>
+                <li><strong>Capacidad:</strong> {{ producto.capacidad }}</li>
+                <li><strong>Versión iOS:</strong> {{ producto.version_ios }}</li>
+                <li><strong>Porcentaje Batería:</strong> {{ producto.porcentaje_bateria }}%</li>
+            {% elif tipo == "mac" %}
+                <li><strong>IMEI:</strong> {{ producto.imei }}</li>
+                <li><strong>Capacidad:</strong> {{ producto.capacidad }}</li>
+                <li><strong>RAM:</strong> {{ producto.ram }}</li>
+                <li><strong>Pantalla:</strong> {{ producto.pantalla }}</li>
+                <li><strong>Versión iOS:</strong> {{ producto.version_ios }}</li>
+            {% elif tipo == "accesorio" %}
+                <li><strong>Tipo:</strong> {{ producto.tipo }}</li>
+            {% endif %}
+            <li><strong>Precio:</strong> {{ producto.precio }}</li>
+            <li><strong>Observaciones:</strong> {{ producto.observaciones }}</li>
+        </ul>
+    </div>
+    <div class="buttons">
+        <button onclick="window.print()">Imprimir</button>
+        <a href="{% url 'inventario' %}">Volver al Inventario</a>
+    </div>
+</body>
+</html>
+
+
+

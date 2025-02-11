@@ -1,0 +1,123 @@
+{% extends "core/base.html" %}
+{% load humanize %}
+
+{% block title %}📄 Ver Producto{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+            <h3 class="mb-0"><i class="bi bi-box"></i> Detalles del Producto - {{ tipo|title }}</h3>
+            <a href="{% url 'inventario' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <!-- 🔹 Información del Producto -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-light fw-bold">
+                            <i class="bi bi-info-circle"></i> Información General
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {% if tipo == "iphone" %}
+                                    <li class="list-group-item"><strong>📱 IMEI:</strong> {{ producto.imei }}</li>
+                                    <li class="list-group-item"><strong>📌 Modelo:</strong> {{ producto.modelo }}</li>
+                                    <li class="list-group-item"><strong>🎨 Color:</strong> {{ producto.color }}</li>
+                                    <li class="list-group-item"><strong>🔋 Batería:</strong> {{ producto.porcentaje_bateria }}%</li>
+                                    <li class="list-group-item"><strong>💾 Capacidad:</strong> {{ producto.capacidad }}</li>
+                                    <li class="list-group-item"><strong>📲 iOS:</strong> {{ producto.version_ios }}</li>
+                                    <li class="list-group-item"><strong>⚡ Estado:</strong> {{ producto.estado }}</li>
+                                {% elif tipo == "mac" %}
+                                    <li class="list-group-item"><strong>💻 IMEI:</strong> {{ producto.imei }}</li>
+                                    <li class="list-group-item"><strong>📌 Modelo:</strong> {{ producto.modelo }}</li>
+                                    <li class="list-group-item"><strong>🎨 Color:</strong> {{ producto.color }}</li>
+                                    <li class="list-group-item"><strong>📺 Pantalla:</strong> {{ producto.pantalla }}</li>
+                                    <li class="list-group-item"><strong>💾 Capacidad:</strong> {{ producto.capacidad }}</li>
+                                    <li class="list-group-item"><strong>⚡ RAM:</strong> {{ producto.ram }}</li>
+                                    <li class="list-group-item"><strong>⚡ Estado:</strong> {{ producto.estado }}</li>
+                                {% elif tipo == "accesorio" %}
+                                    <li class="list-group-item"><strong>🔌 Tipo:</strong> {{ producto.tipo }}</li>
+                                    <li class="list-group-item"><strong>📌 Modelo:</strong> {{ producto.modelo }}</li>
+                                    <li class="list-group-item"><strong>🎨 Color:</strong> {{ producto.color }}</li>
+                                    <li class="list-group-item"><strong>⚡ Estado:</strong> {{ producto.estado }}</li>
+                                {% endif %}
+                                <li class="list-group-item"><strong>📍 Ubicación:</strong> {{ producto.ubicacion|default:"No especificada" }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🔹 Precio y Observaciones -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-light fw-bold">
+                            <i class="bi bi-cash"></i> Precio y Notas
+                        </div>
+                        <div class="card-body">
+                            <h4 class="fw-bold text-success">💰 ${{ producto.precio_pesos|default:"0"|intcomma }} ARS</h4>
+                            <hr>
+                            <p class="text-muted"><i class="bi bi-pencil"></i> <strong>Observaciones:</strong></p>
+                            <p class="text-secondary">{{ producto.observaciones|default:"No hay observaciones." }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📷 Sección de Fotos -->
+            <h5 class="mt-5 fw-bold"><i class="bi bi-camera"></i> Fotos del Producto</h5>
+            <div class="row g-3">
+                {% for foto in fotos %}
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0 text-center p-2">
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#modalFoto{{ foto.id }}">
+                                <div class="image-container">
+                                    <img src="{{ foto.foto.url }}" alt="Foto del Producto" class="img-thumbnail">
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Modal para ampliar imagen -->
+                    <div class="modal fade" id="modalFoto{{ foto.id }}" tabindex="-1" aria-labelledby="modalLabel{{ foto.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="modalLabel{{ foto.id }}">Vista Previa</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <img src="{{ foto.foto.url }}" alt="Foto del Producto" class="img-fluid rounded">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted text-center">⚠️ No hay fotos disponibles.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🔹 CSS para que las imágenes queden en un tamaño uniforme sin distorsión -->
+<style>
+    .image-container {
+        width: 100%;
+        height: 120px;  /* Tamaño fijo */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .image-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;  /* 🔹 Evita cortes y mantiene la proporción */
+    }
+</style>
+{% endblock %}
+

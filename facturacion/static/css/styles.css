@@ -1,0 +1,24 @@
+/* Estilo para el botón "Ver" */
+.btn-ver {
+    background-color: #f8f9fa; /* Gris claro */
+    color: #000; /* Negro */
+    border: 1px solid #ced4da; /* Borde gris */
+}
+
+.btn-ver:hover {
+    background-color: #e9ecef; /* Gris un poco más oscuro al hacer hover */
+    color: #000; /* Negro */
+}
+
+/* Estilo para el botón "Editar" */
+.btn-editar {
+    background-color: #f8f9fa; /* Gris claro */
+    color: #000; /* Negro */
+    border: 1px solid #ced4da; /* Borde gris */
+}
+
+.btn-editar:hover {
+    background-color: #e9ecef; /* Gris un poco más oscuro al hacer hover */
+    color: #000; /* Negro */
+}
+

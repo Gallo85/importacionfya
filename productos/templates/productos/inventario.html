@@ -1,0 +1,174 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block title %}📦 Inventario{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-primary"><i class="bi bi-box-seam"></i> Inventario</h1>
+
+    <!-- 🔹 Formulario de Filtros -->
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body">
+            <h5 class="card-title text-secondary">🔍 Buscar Productos</h5>
+            <hr>
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" name="modelo" class="form-control" id="modelo" placeholder="Buscar por modelo" value="{{ filtros.modelo }}">
+                        <label for="modelo">Modelo</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <select name="tipo" class="form-select" id="tipo">
+                            <option value="">Todos los tipos</option>
+                            <option value="iphone" {% if filtros.tipo == "iphone" %}selected{% endif %}>iPhone</option>
+                            <option value="mac" {% if filtros.tipo == "mac" %}selected{% endif %}>Mac</option>
+                            <option value="accesorio" {% if filtros.tipo == "accesorio" %}selected{% endif %}>Accesorio</option>
+                        </select>
+                        <label for="tipo">Tipo</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" name="imei" class="form-control" id="imei" placeholder="Buscar por IMEI" value="{{ filtros.imei }}">
+                        <label for="imei">IMEI</label>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary w-100"> Filtrar</button>
+                    <a href="{% url 'inventario' %}" class="btn btn-outline-success w-100"> Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 🔹 Tabla de Inventario -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover align-middle text-center">
+            <thead class="table-primary">
+                <tr>
+                    <th>#</th>
+                    <th>Modelo</th>
+                    <th>Tipo</th>
+                    <th>IMEI</th>
+                    <th>QR</th>
+                    <th>Precio en Pesos</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                <tr>
+                    <td>{{ forloop.counter|add:productos.start_index|add:"-1" }}</td>
+                    <td class="fw-bold">{{ producto.obj.modelo }}</td>
+                    <td><span class="badge bg-secondary">{{ producto.tipo|title }}</span></td>
+                    <td>
+                        {% if producto.tipo == "iphone" or producto.tipo == "mac" %}
+                            {{ producto.obj.imei }}
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if producto.obj.qr_code %}
+                            <img src="{{ producto.obj.qr_code.url }}" alt="QR" width="50" class="img-thumbnail">
+                        {% else %}
+                            <span class="text-muted">No disponible</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold text-success">
+                        ${{ producto.obj.precio_pesos|default:"0"|intcomma }} ARS
+                    </td>
+                    <td>
+                        <span class="text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="
+                            {% if producto.tipo == 'iphone' %}
+                                IMEI: {{ producto.obj.imei }}, Color: {{ producto.obj.color }}, Estado: {{ producto.obj.estado }}, Capacidad: {{ producto.obj.capacidad }}, Batería: {{ producto.obj.porcentaje_bateria }}%
+                            {% elif producto.tipo == 'mac' %}
+                                IMEI: {{ producto.obj.imei }}, Estado: {{ producto.obj.estado }}, Capacidad: {{ producto.obj.capacidad }}, RAM: {{ producto.obj.ram }}, Pantalla: {{ producto.obj.pantalla }}
+                            {% elif producto.tipo == 'accesorio' %}
+                                Tipo: {{ producto.obj.tipo }}, Color: {{ producto.obj.color }}, Estado: {{ producto.obj.estado }}
+                            {% endif %}">
+                            🔍 Ver más
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="{% url 'ver_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'editar_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'eliminar_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-danger btn-sm"
+                               onclick="return confirm('¿Seguro que deseas eliminar este producto?');">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>                    
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted">⚠️ No hay productos registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Activar tooltips de Bootstrap
+    document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+
+<!-- 🔹 Paginación -->
+{% if productos.has_other_pages %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if productos.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">« Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ productos.previous_page_number }}">‹ Anterior</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ productos.number }} de {{ productos.paginator.num_pages }}</span>
+            </li>
+
+            {% if productos.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ productos.next_page_number }}">Siguiente ›</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ productos.paginator.num_pages }}">Última »</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

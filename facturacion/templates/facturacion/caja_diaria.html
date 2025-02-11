@@ -1,0 +1,98 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary text-left">📅 Caja Diaria</h1>
+
+    <!-- Formulario de Filtro por Rango de Fechas -->
+    <form method="GET" class="mb-4 p-3 bg-light rounded shadow-sm">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="fecha_inicio" class="form-label fw-bold">Desde:</label>
+                <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control"
+                       value="{{ fecha_inicio }}">
+            </div>
+            <div class="col-md-4">
+                <label for="fecha_fin" class="form-label fw-bold">Hasta:</label>
+                <input type="date" id="fecha_fin" name="fecha_fin" class="form-control"
+                       value="{{ fecha_fin }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">🔍 Filtrar</button>
+                <a href="{% url 'facturacion:caja_diaria' %}" class="btn btn-outline-secondary">🔄 Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tabla de Caja Diaria -->
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm">
+            <thead class="table-primary text-center">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Factura #</th>
+                    <th class="text-end">Total en Pesos</th>
+                    <th class="text-end">Total en Dólares</th>
+                    <th class="text-end">Cotizacion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for factura in caja_diaria %}
+                    <tr class="text-center">
+                        <td>{{ factura.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>{{ factura.id }}</td>
+                        <td class="text-end text-primary fw-bold">${{ factura.pago_pesos|floatformat:2|intcomma }}</td>
+                        <td class="text-end text-success fw-bold">${{ factura.pago_dolares|floatformat:2|intcomma }}</td>
+                        <td class="text-end text-warning fw-bold">${{ factura.dolar_venta|floatformat:2|intcomma }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">No hay registros en el rango seleccionado.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="bg-light fw-bold text-center">
+                    <td colspan="2" class="text-end">💵 Total en el Rango:</td>
+                    <td class="text-end text-primary">${{ total_pesos|floatformat:2|intcomma }}</td>
+                    <td class="text-end text-success">${{ total_dolares|floatformat:2|intcomma }}</td>
+                    <td></td>  <!-- Espacio vacío para mantener formato -->
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    {% if caja_diaria.has_other_pages %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if caja_diaria.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if fecha_inicio %}&fecha_inicio={{ fecha_inicio }}{% endif %}{% if fecha_fin %}&fecha_fin={{ fecha_fin }}{% endif %}">« Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ caja_diaria.previous_page_number }}{% if fecha_inicio %}&fecha_inicio={{ fecha_inicio }}{% endif %}{% if fecha_fin %}&fecha_fin={{ fecha_fin }}{% endif %}">‹ Anterior</a>
+                </li>
+            {% endif %}
+    
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ caja_diaria.number }} de {{ caja_diaria.paginator.num_pages }}</span>
+            </li>
+    
+            {% if caja_diaria.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ caja_diaria.next_page_number }}{% if fecha_inicio %}&fecha_inicio={{ fecha_inicio }}{% endif %}{% if fecha_fin %}&fecha_fin={{ fecha_fin }}{% endif %}">Siguiente ›</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ caja_diaria.paginator.num_pages }}{% if fecha_inicio %}&fecha_inicio={{ fecha_inicio }}{% endif %}{% if fecha_fin %}&fecha_fin={{ fecha_fin }}{% endif %}">Última »</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+
+</div>
+{% endblock %}
+

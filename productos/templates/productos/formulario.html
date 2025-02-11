@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+
+{% block title %}📝 {{ tipo|capfirst }} - {{ accion }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0" style="width: 50rem; border-radius: 12px;">
+        <div class="card-header bg-primary text-white text-center py-3" style="border-radius: 12px 12px 0 0;">
+            <h3 class="mb-0"><i class="bi bi-pencil-square"></i> {{ accion }} {{ tipo|capfirst }}</h3>
+        </div>
+        <div class="card-body p-4">
+            <h5 class="text-secondary mb-3"><i class="bi bi-info-circle"></i> Completa la información del producto</h5>
+            <hr>
+            
+            <form method="post" enctype="multipart/form-data" class="row g-3 needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Renderizado de campos con Material Design -->
+                {% for field in form %}
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        {{ field }}
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    </div>
+                    {% if field.errors %}
+                    <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <!-- Botones de Acción -->
+                <div class="col-12 text-center mt-4">
+                    <button type="submit" class="btn btn-success px-4 shadow-sm">
+                        <i class="bi bi-check-circle"></i> Guardar
+                    </button>
+                    <a href="{% url 'inventario' %}" class="btn btn-outline-secondary px-4 shadow-sm">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CSS para mejorar la presentación de los campos -->
+<style>
+    .form-floating > label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .form-floating > .form-control {
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: none;
+        transition: all 0.3s ease;
+    }
+    .form-floating > .form-control:focus {
+        box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+        border-color: #007bff;
+    }
+    .btn {
+        border-radius: 8px;
+        padding: 10px 15px;
+    }
+    .btn-success {
+        background-color: #28a745;
+        border: none;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+    }
+    .btn-outline-secondary {
+        border-color: #6c757d;
+        color: #6c757d;
+    }
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+</style>
+{% endblock %}
+

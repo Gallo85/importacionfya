@@ -1,0 +1,90 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block title %}📜 Notas de Crédito{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary text-left">📜 Notas de Crédito</h1>
+
+    <!-- Botón para crear nueva Nota de Crédito -->
+    <div class="text-left mb-3">
+        <a href="{% url 'facturacion:listar_facturas_para_nota_credito' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nueva Nota de Crédito
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm">
+            <thead class="table-primary text-center">
+                <tr>
+                    <th>#</th>
+                    <th>Factura</th>
+                    <th>Cliente</th>
+                    <th>Motivo</th>
+                    <th class="text-center">Monto</th>
+                    <th class="text-center">Fecha</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nota in notas %}
+                <tr class="text-center">
+                    <td>{{ nota.id }}</td>
+                    <td>Factura #{{ nota.factura.id }}</td>
+                    <td>{{ nota.factura.cliente.nombre }} {{ nota.factura.cliente.apellido }}</td>
+                    <td>{{ nota.get_motivo_display }}</td> 
+                    <td class="text-center text-danger fw-bold">${{ nota.monto|floatformat:2|intcomma }}</td>
+                    <td class="text-center">{{ nota.fecha|date:"d/m/Y H:i" }}</td>
+                    <td class="text-center">
+                        {% if nota.estado == 'pendiente' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                        {% elif nota.estado == 'procesada' %}
+                            <span class="badge bg-success">Procesada</span>
+                        {% elif nota.estado == 'anulada' %}
+                            <span class="badge bg-danger">Anulada</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="{% url 'facturacion:detalle_nota_credito' nota.id %}" class="btn btn-sm btn-info">👁️ Ver</a>
+
+                            {% if nota.estado == 'pendiente' %}
+                                <a href="{% url 'facturacion:procesar_nota_credito' nota.id %}" class="btn btn-sm btn-success">✅ Procesar</a>
+                                <a href="{% url 'facturacion:anular_nota_credito' nota.id %}" class="btn btn-sm btn-danger">❌ Anular</a>
+                            {% elif nota.estado == 'procesada' %}
+                                <a href="{% url 'facturacion:anular_nota_credito' nota.id %}" class="btn btn-sm btn-danger">❌ Anular</a>
+                            {% elif nota.estado == 'anulada' %}
+                                <span class="text-muted">Sin Acción</span>
+                            {% endif %}
+
+                            <!-- Botón de eliminar (Solo Gerentes) -->
+                            {% if user.role == "Gerente" %}
+                                <a href="{% url 'facturacion:eliminar_nota_credito' nota.id %}" class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('¿Seguro que quieres eliminar esta nota de crédito? Esta acción no se puede deshacer.');">
+                                    🗑️ Eliminar
+                                </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-3">No hay notas de crédito registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+

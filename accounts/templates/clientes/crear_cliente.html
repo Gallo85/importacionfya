@@ -1,0 +1,99 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Crear Nuevo Cliente{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3>🆕 Crear Nuevo Cliente</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Nombre y Apellido -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" name="nombre" id="id_nombre" class="form-control" placeholder="Nombre" value="{{ form.nombre.value }}" required>
+                                    <label for="id_nombre">📛 Nombre</label>
+                                </div>
+                                {% if form.nombre.errors %}
+                                    <div class="text-danger">{{ form.nombre.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" name="apellido" id="id_apellido" class="form-control" placeholder="Apellido" value="{{ form.apellido.value }}" required>
+                                    <label for="id_apellido">👤 Apellido</label>
+                                </div>
+                                {% if form.apellido.errors %}
+                                    <div class="text-danger">{{ form.apellido.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Email y Teléfono -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="email" name="email" id="id_email" class="form-control" placeholder="Correo Electrónico" value="{{ form.email.value }}" required>
+                                    <label for="id_email">📧 Correo Electrónico</label>
+                                </div>
+                                {% if form.email.errors %}
+                                    <div class="text-danger">{{ form.email.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" name="telefono" id="id_telefono" class="form-control" placeholder="Teléfono" value="{{ form.telefono.value }}" required>
+                                    <label for="id_telefono">📞 Teléfono</label>
+                                </div>
+                                {% if form.telefono.errors %}
+                                    <div class="text-danger">{{ form.telefono.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <input type="text" name="direccion" id="id_direccion" class="form-control" placeholder="Dirección" value="{{ form.direccion.value }}" required>
+                                <label for="id_direccion">🏠 Dirección</label>
+                            </div>
+                            {% if form.direccion.errors %}
+                                <div class="text-danger">{{ form.direccion.errors|join:" " }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notas -->
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <textarea name="notas" id="id_notas" class="form-control" placeholder="Notas">{{ form.notas.value }}</textarea>
+                                <label for="id_notas">📝 Notas</label>
+                            </div>
+                            {% if form.notas.errors %}
+                                <div class="text-danger">{{ form.notas.errors|join:" " }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-success px-4">💾 Guardar Cliente</button>
+                            <a href="{% url 'clientes' %}" class="btn btn-outline-secondary px-4">❌ Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+

@@ -1,0 +1,84 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Editar Perfil{% endblock %}
+
+{% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4" style="max-width: 500px; width: 100%;">
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="mb-0"><i class="bi bi-person-circle"></i> Editar Perfil</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted text-center">Actualiza tu información personal.</p>
+
+            <!-- Mensajes de éxito o error -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center" role="alert">
+                        <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill text-success{% else %}bi-exclamation-triangle-fill text-danger{% endif %}"></i> 
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <!-- Nombre y Apellido -->
+                <div class="mb-3">
+                    <label for="nombre" class="form-label fw-bold"><i class="bi bi-person-fill"></i> Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ user.first_name }}" required>
+                    <div class="invalid-feedback">El nombre es obligatorio.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="apellido" class="form-label fw-bold"><i class="bi bi-person-fill"></i> Apellido</label>
+                    <input type="text" class="form-control" id="apellido" name="apellido" value="{{ user.last_name }}" required>
+                    <div class="invalid-feedback">El apellido es obligatorio.</div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-bold"><i class="bi bi-envelope-fill"></i> Email</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                    <div class="invalid-feedback">Introduce un email válido.</div>
+                </div>
+
+                <!-- Teléfono -->
+                <div class="mb-3">
+                    <label for="telefono" class="form-label fw-bold"><i class="bi bi-telephone-fill"></i> Teléfono</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono" value="{{ user.telefono|default_if_none:'' }}" required>
+                    <div class="invalid-feedback">Introduce un número de teléfono válido.</div>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'dashboard_vendedor' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script para validación Bootstrap -->
+<script>
+    (function() {
+        'use strict';
+        let forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}

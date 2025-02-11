@@ -1,0 +1,133 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary text-left">🧾 Facturas</h1>
+
+    <!-- 🔍 Filtros de búsqueda -->
+    <form method="GET" class="mb-3">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <input type="text" name="num_factura" class="form-control"
+                       placeholder="🔎 N° Factura"
+                       value="{{ num_factura }}">
+            </div>
+            <div class="col-md-4">
+                <input type="text" name="nombre_cliente" class="form-control"
+                       placeholder="👤 Cliente (Nombre o Apellido)"
+                       value="{{ nombre_cliente }}">
+            </div>
+            <div class="col-md-3">
+                <input type="date" name="fecha_factura" class="form-control"
+                       value="{{ fecha_factura }}">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Buscar</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="text-left mb-3">
+        <a href="{% url 'facturacion:crear_factura' %}" class="btn btn-primary">
+            <i class="bi bi-file-earmark-plus"></i> Crear Nueva Factura
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm text-center align-middle">
+            <thead class="table-primary">
+                <tr>
+                    <th class="text-center">#</th>
+                    <th class="text-center">Cliente</th>
+                    <th class="text-center">Fecha</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for factura in facturas %}
+                    <tr>
+                        <td class="text-center">{{ factura.id }}</td>
+                        <td class="text-center">{{ factura.cliente }}</td>
+                        <td class="text-center">{{ factura.fecha|date:"d/m/Y H:i" }}</td>
+                        <td class="text-center text-primary fw-bold">
+                            ${{ factura.total|floatformat:2|intcomma|default_if_none:"0,00" }}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{% url 'facturacion:detalle_factura' factura.id %}" 
+                                   class="btn btn-sm btn-outline-info" title="Ver Factura">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if es_gerente %}
+                                    <a href="{% url 'facturacion:eliminar_factura' factura.id %}" 
+                                       class="btn btn-sm btn-outline-danger" 
+                                       onclick="return confirm('¿Estás seguro de eliminar esta factura?');"
+                                       title="Eliminar Factura">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'facturacion:imprimir_factura' factura.id %}" 
+                                   class="btn btn-sm btn-outline-secondary" title="Imprimir Factura" target="_blank">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                                <form method="post" action="{% url 'facturacion:enviar_factura_email' factura.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Enviar por Email">
+                                        <i class="bi bi-envelope"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">
+                            📄 No se encontraron facturas.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 🔄 Paginación -->
+    {% if facturas.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if facturas.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?num_factura={{ num_factura }}&nombre_cliente={{ nombre_cliente }}&fecha_factura={{ fecha_factura }}&page=1">« Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?num_factura={{ num_factura }}&nombre_cliente={{ nombre_cliente }}&fecha_factura={{ fecha_factura }}&page={{ facturas.previous_page_number }}">‹ Anterior</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                    <span class="page-link">Página {{ facturas.number }} de {{ facturas.paginator.num_pages }}</span>
+                </li>
+
+                {% if facturas.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?num_factura={{ num_factura }}&nombre_cliente={{ nombre_cliente }}&fecha_factura={{ fecha_factura }}&page={{ facturas.next_page_number }}">Siguiente ›</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?num_factura={{ num_factura }}&nombre_cliente={{ nombre_cliente }}&fecha_factura={{ fecha_factura }}&page={{ facturas.paginator.num_pages }}">Última »</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+

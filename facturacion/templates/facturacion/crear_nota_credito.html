@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block title %}📜 Crear Nota de Crédito{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary"><i class="bi bi-file-earmark-minus"></i> Crear Nota de Crédito</h1>
+
+    <!-- 🔹 Factura Asociada -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="card-title text-secondary"><i class="bi bi-receipt"></i> Factura Asociada</h4>
+            <p class="form-control-plaintext fw-bold">
+                Factura #{{ factura.id }} - {{ factura.cliente.nombre }} {{ factura.cliente.apellido }}
+            </p>
+        </div>
+    </div>
+
+    <!-- 🔹 Descripción de la Compra -->
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm text-center align-middle">
+            <thead class="table-primary">
+                <tr>
+                    <th class="text-center">Producto</th>
+                    <th class="text-center">Cantidad</th>
+                    <th class="text-end">Precio Unitario</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detalle in detalles %}
+                <tr>
+                    <td class="text-center">{{ detalle.producto }}</td>
+                    <td class="text-center">{{ detalle.cantidad }}</td>
+                    <td class="text-end text-primary fw-bold">${{ detalle.precio_unitario|intcomma }}</td>
+                    <td class="text-end text-success fw-bold">${{ detalle.subtotal|intcomma }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="bg-light fw-bold">
+                    <td colspan="3" class="text-end">💰 Total de la Factura:</td>
+                    <td class="text-end text-danger fw-bold">${{ total_factura|intcomma }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- 🔹 Formulario de la Nota de Crédito -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h4 class="card-title text-secondary"><i class="bi bi-pencil-square"></i> Generar Nota de Crédito</h4>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="monto" class="form-label">Monto</label>
+                    {{ form.monto }}
+                    {% if form.monto.errors %}
+                        <div class="text-danger">{{ form.monto.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="motivo" class="form-label">Motivo</label>
+                    {{ form.motivo }}
+                    {% if form.motivo.errors %}
+                        <div class="text-danger">{{ form.motivo.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success px-4">💾 Guardar Nota de Crédito</button>
+                    <a href="{% url 'facturacion:listar_notas_credito' %}" class="btn btn-secondary px-4">❌ Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

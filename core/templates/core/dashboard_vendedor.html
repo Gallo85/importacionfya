@@ -1,0 +1,22 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-primary">📊 Dashboard Vendedor</h1>
+    <p>{{ data }}</p>
+
+    <!-- 🔹 Sección de Inventario -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="card-title text-secondary">📦 Inventario</h5>
+            <hr>
+            <ul class="list-group">
+                <li class="list-group-item"><strong>📱 iPhones en Inventario:</strong> {{ total_iphones }}</li>
+                <li class="list-group-item"><strong>💻 Macs en Inventario:</strong> {{ total_macs }}</li>
+                <li class="list-group-item"><strong>🔌 Accesorios en Inventario:</strong> {{ total_accesorios }}</li>
+                <li class="list-group-item"><strong>📦 Total de Productos:</strong> {{ total_productos }}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

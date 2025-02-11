@@ -1,0 +1,213 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary">🧾 Crear Nueva Factura</h1>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-secondary">Información del Cliente</h5>
+            <hr>
+            <form method="post" id="factura-form">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="cliente" class="form-label">Cliente</label>
+                    {{ factura_form.cliente }}
+                </div>
+
+                <button type="button" class="btn btn-primary mb-3" id="agregar-producto">➕ Agregar Producto</button>
+
+                <div class="table-responsive">
+                    <table class="table table-hover shadow-sm text-center align-middle">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal (ARS)</th>
+                                <th>Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productos-lista"></tbody>
+                    </table>
+                </div>
+
+                <h5 class="mt-4 text-secondary">💰 Métodos de Pago</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="pago_pesos" class="form-label">Pago en Pesos</label>
+                        <input type="text" id="pago_pesos" name="pago_pesos" class="form-control formato-precio text-center" value="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="pago_dolares" class="form-label">Pago en Dólares</label>
+                        <input type="text" id="pago_dolares" name="pago_dolares" class="form-control formato-precio text-center" value="0">
+                        <small class="text-muted">Dólar Compra: <strong id="cotizacion_dolar_compra" data-value="{{ dolar_compra|default:1 }}">{{ dolar_compra|default:1 }}</strong> ARS/USD</small>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="total" class="form-label">Total (ARS)</label>
+                        <input type="text" id="total" class="form-control text-success fw-bold text-center" readonly>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="vuelto" class="form-label">Vuelto (ARS)</label>
+                        <input type="text" id="vuelto" class="form-control text-danger fw-bold text-center" readonly>
+                    </div>
+                </div>
+
+                <div class="mb-3 mt-4">
+                    <label for="observaciones" class="form-label">Observaciones</label>
+                    {{ factura_form.observaciones }}
+                </div>
+                <!-- ✅ Checkbox de vuelto entregado -->
+                <div class="form-check mb-3">
+                    {{ factura_form.vuelto_entregado }}
+                    <label class="form-check-label" for="{{ factura_form.vuelto_entregado.id_for_label }}">
+                        ¿Vuelto entregado?
+                    </label>
+                </div>
+            
+                <!-- ✅ Botones dentro del formulario -->
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <a href="{% url 'facturacion:listar_facturas' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+            </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const totalInput = document.getElementById("total");
+    const pagoPesosInput = document.getElementById("pago_pesos");
+    const pagoDolaresInput = document.getElementById("pago_dolares");
+    const cotizacionDolarCompra = parseFloat(document.getElementById("cotizacion_dolar_compra").getAttribute("data-value"));
+    const dolarVenta = parseFloat("{{ dolar_venta|default:1 }}");
+    const productosLista = document.getElementById("productos-lista");
+    const agregarProductoBtn = document.getElementById("agregar-producto");
+    const vueltoInput = document.getElementById("vuelto");
+
+    function formatPrice(value) {
+        return new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+    }
+
+    function actualizarTotal() {
+        let total = 0;
+        document.querySelectorAll(".subtotal-input").forEach(input => {
+            total += parseFloat(input.value.replace(/\./g, "").replace(",", ".")) || 0;
+        });
+
+        let pagoPesos = parseFloat(pagoPesosInput.value.replace(/\./g, "").replace(",", ".")) || 0;
+        let pagoDolares = parseFloat(pagoDolaresInput.value.replace(/\./g, "").replace(",", ".")) || 0;
+        let pagoDolaresEnPesos = pagoDolares * cotizacionDolarCompra;
+        let totalPagado = pagoPesos + pagoDolaresEnPesos;
+        
+        let totalRestante = total - totalPagado;
+        let vuelto = totalPagado > total ? totalPagado - total : 0;
+
+        totalInput.value = `$${formatPrice(totalRestante > 0 ? totalRestante : 0)}`;
+        vueltoInput.value = `$${formatPrice(vuelto)}`;
+    }
+
+    pagoPesosInput.addEventListener("input", actualizarTotal);
+    pagoDolaresInput.addEventListener("input", actualizarTotal);
+
+    agregarProductoBtn.addEventListener("click", function () {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td class="align-middle">
+                <input type="hidden" name="productos_ids[]" class="producto-id">
+                <input type="text" class="form-control producto-input text-center" placeholder="Escriba el modelo o número">
+                <ul class="list-group resultado-busqueda" style="display: none; position: absolute; z-index: 1000;"></ul>
+            </td>
+            <td class="align-middle">
+                <input type="number" name="cantidades[]" class="form-control cantidad-input text-center" placeholder="Cantidad" min="1" value="1">
+            </td>
+            <td class="align-middle">
+                <input type="text" class="form-control subtotal-input text-primary fw-bold text-center" readonly>
+            </td>
+            <td class="align-middle">
+                <button type="button" class="btn btn-danger btn-sm eliminar-producto">🗑️</button>
+            </td>
+        `;
+        productosLista.appendChild(row);
+
+        const productoInput = row.querySelector(".producto-input");
+        const resultadoBusqueda = row.querySelector(".resultado-busqueda");
+        const cantidadInput = row.querySelector(".cantidad-input");
+        const subtotalInput = row.querySelector(".subtotal-input");
+
+        productoInput.addEventListener("input", function () {
+            const query = productoInput.value.trim();
+            if (query.length > 1) {
+                fetch(`/facturacion/productos/buscar/?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        resultadoBusqueda.innerHTML = "";
+                        resultadoBusqueda.style.display = "none";
+                        if (data.productos.length > 0) {
+                            resultadoBusqueda.style.display = "block";
+                            data.productos.forEach(producto => {
+                                const item = document.createElement("li");
+                                item.className = "list-group-item";
+                                item.textContent = `${producto.nombre} (IMEI: ${producto.imei}) - $${formatPrice(producto.precio * dolarVenta)}`;
+                                item.dataset.id = producto.id;
+                                item.dataset.precio = producto.precio * dolarVenta;
+                                item.dataset.imei = producto.imei;
+
+                                item.addEventListener("click", function () {
+                                    productoInput.value = `${producto.nombre} (IMEI: ${producto.imei})`; // Muestra el nombre con el IMEI
+                                    row.querySelector(".producto-id").value = producto.id;
+                                    cantidadInput.value = 1;
+                                    subtotalInput.value = formatPrice(item.dataset.precio);
+                                    actualizarTotal();
+
+                                    resultadoBusqueda.innerHTML = "";
+                                    resultadoBusqueda.style.display = "none";
+                                });
+
+                                resultadoBusqueda.appendChild(item);
+                            });
+                        }
+                    })
+                    .catch(error => console.error("Error al buscar productos:", error));
+            }
+        });
+
+        cantidadInput.addEventListener("input", function () {
+            const cantidad = parseInt(cantidadInput.value) || 0;
+            const precio = parseFloat(row.querySelector(".producto-id").value) || 0;
+            subtotalInput.value = formatPrice(cantidad * precio);
+            actualizarTotal();
+        });
+
+        row.querySelector(".eliminar-producto").addEventListener("click", function () {
+            row.remove();
+            actualizarTotal();
+        });
+    });
+});
+
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

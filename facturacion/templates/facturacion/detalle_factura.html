@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary">🧾 Detalle de Factura #{{ factura.id }}</h1>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-secondary">Información de la Factura</h5>
+            <hr>
+            <p><strong>Cliente:</strong> {{ factura.cliente }}</p>
+            <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}</p>
+            <p><strong>Cotización del Dólar:</strong> ${{ factura.dolar_venta|floatformat:2|intcomma }}</p>
+            <p><strong>Método de Pago:</strong> 
+                {% if factura.pago_pesos > 0 and factura.pago_dolares > 0 %}
+                    Mixto (Pesos + Dólares)
+                {% elif factura.pago_pesos > 0 %}
+                    Solo en Pesos
+                {% elif factura.pago_dolares > 0 %}
+                    Solo en Dólares
+                {% else %}
+                    No especificado
+                {% endif %}
+            </p>
+            <p><strong>Pago en Pesos:</strong> ${{ factura.pago_pesos|floatformat:2|intcomma }}</p>
+            <p><strong>Pago en Dólares:</strong> USD ${{ factura.pago_dolares|floatformat:2|intcomma }}</p>
+            <p><strong>Observaciones:</strong> {{ factura.observaciones }}</p>
+            
+            <!-- ✅ Sección del Vuelto -->
+            <p><strong>Vuelto:</strong> 
+                {% if factura.vuelto > 0 %}
+                    <span class="text-success">${{ factura.vuelto|floatformat:2|intcomma }}</span>
+                {% else %}
+                    <span class="text-muted">Sin vuelto</span>
+                {% endif %}
+            </p>
+            <p><strong>Vuelto Entregado:</strong> 
+                {% if factura.vuelto_entregado %}
+                    ✅ Sí
+                {% else %}
+                    ❌ No
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm text-center align-middle">
+            <thead class="table-primary">
+                <tr>
+                    <th>Producto</th>
+                    <th class="text-end">Precio Unitario</th>
+                    <th class="text-end">Cantidad</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detalle in detalles %}
+                <tr>
+                    <td class="text-center">{{ detalle.nombre }}</td>
+                    <td class="text-end">${{ detalle.precio_unitario|floatformat:2|intcomma }}</td>
+                    <td class="text-end">{{ detalle.cantidad }}</td>
+                    <td class="text-end text-primary fw-bold">${{ detalle.subtotal|floatformat:2|intcomma }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">No hay productos en esta factura.</td>
+                </tr>
+                {% endfor %}
+            </tbody>            
+            <tfoot>
+                <tr class="bg-light fw-bold">
+                    <td colspan="3" class="text-end">💰 Total:</td>
+                    <td class="text-end text-success">${{ factura.total|floatformat:2|intcomma }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'facturacion:listar_facturas' %}" class="btn btn-secondary">
+            🔙 Volver a Facturas
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

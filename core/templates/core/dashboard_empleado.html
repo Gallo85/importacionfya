@@ -1,0 +1,100 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard Empleado{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-primary"><i class="bi bi-person-workspace"></i> Dashboard Empleado</h1>
+    
+    <div class="row">
+        <!-- 🔹 Tarjeta: Inventario General -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-box-seam"></i> Inventario Disponible
+                </div>
+                <div class="card-body">
+                    <p class="fw-bold fs-4">{{ total_productos }} productos en stock</p>
+                    <a href="{% url 'inventario' %}" class="btn btn-primary">Ver Inventario</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔹 Tarjeta: Últimos Productos Agregados -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-white">
+                    <i class="bi bi-calendar-plus"></i> Últimos Productos Agregados
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for producto in ultimos_productos %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ producto.modelo }} - {{ producto.tipo }}
+                                <span class="badge bg-secondary">{{ producto.fecha_creacion|date:"d/m/Y" }}</span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">No hay productos recientes</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 Segunda Fila -->
+    <div class="row mt-4">
+        <!-- 🔹 Tarjeta: Últimos Clientes Registrados -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-people-fill"></i> Últimos Clientes Registrados
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for cliente in ultimos_clientes %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ cliente.nombre }} {{ cliente.apellido }}
+                                <span class="badge bg-secondary">{{ cliente.fecha_registro|date:"d/m/Y" }}</span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">No hay clientes recientes</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔹 Tarjeta: Últimos Movimientos -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-clock-history"></i> Últimos Movimientos
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for movimiento in ultimos_movimientos %}
+                            <li class="list-group-item">
+                                <i class="bi bi-pencil-square text-success"></i> {{ movimiento.descripcion }} ({{ movimiento.fecha|date:"d/m/Y H:i" }})
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">No hay movimientos recientes</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 Accesos Rápidos -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{% url 'inventario' %}" class="btn btn-primary btn-lg me-3"><i class="bi bi-box"></i> Inventario</a>
+            <a href="{% url 'clientes' %}" class="btn btn-success btn-lg me-3"><i class="bi bi-people"></i> Clientes</a>
+            <a href="{% url 'facturacion:listar_facturas' %}" class="btn btn-warning btn-lg"><i class="bi bi-receipt"></i> Facturación</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

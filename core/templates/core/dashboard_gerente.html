@@ -1,0 +1,113 @@
+{% extends 'core/base.html' %}
+{% load humanize %}
+
+{% block title %}📊 Dashboard Gerente{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-primary text-center"><i class="bi bi-speedometer2"></i> Dashboard Gerente</h1>
+
+    <!-- 🔹 Resumen de Ventas y Facturación -->
+    <div class="row justify-content-center g-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 text-center bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="bi bi-receipt"></i> Facturas Generadas</h5>
+                    <h2 class="fw-bold text-primary">{{ total_facturas|intcomma }}</h2>
+                    <p class="text-muted small">Facturas creadas en el sistema</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 text-center bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="bi bi-cash-stack"></i> Total de Ventas</h5>
+                    <h2 class="fw-bold text-success">${{ total_ventas|floatformat:2|intcomma }}</h2>
+                    <p class="text-muted small">Ventas totales en ARS</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 text-center bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="bi bi-box-seam"></i> Productos en Inventario</h5>
+                    <h2 class="fw-bold text-warning">{{ total_productos|intcomma }}</h2>
+                    <p class="text-muted small">Artículos disponibles</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 Inventario Detallado -->
+    <div class="row justify-content-center g-4 mt-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 text-center bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="bi bi-phone"></i> iPhones en Inventario</h5>
+                    <h2 class="fw-bold text-primary">{{ total_iphones|intcomma }}</h2>
+                    <p class="text-muted small">Cantidad de iPhones disponibles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 text-center bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="bi bi-laptop"></i> Macs en Inventario</h5>
+                    <h2 class="fw-bold text-success">{{ total_macs|intcomma }}</h2>
+                    <p class="text-muted small">Unidades de Mac disponibles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 text-center bg-light">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="bi bi-plug"></i> Accesorios en Inventario</h5>
+                    <h2 class="fw-bold text-warning">{{ total_accesorios|intcomma }}</h2>
+                    <p class="text-muted small">Cantidad de accesorios disponibles</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 Últimas Facturas -->
+    <div class="card shadow-sm border-0 mt-5">
+        <div class="card-body">
+            <h5 class="card-title text-secondary"><i class="bi bi-clock-history"></i> Últimas Facturas</h5>
+            <hr>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-primary text-center">
+                        <tr>
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for factura in ultimas_facturas %}
+                        <tr class="text-center">
+                            <td>{{ factura.id }}</td>
+                            <td>{{ factura.cliente }}</td>
+                            <td>{{ factura.fecha|date:"d/m/Y H:i" }}</td>
+                            <td class="text-primary fw-bold">${{ factura.total|floatformat:2|intcomma }}</td>
+                            <td>
+                                <a href="{% url 'facturacion:detalle_factura' factura.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">⚠️ No hay facturas recientes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

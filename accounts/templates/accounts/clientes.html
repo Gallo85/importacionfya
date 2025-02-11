@@ -1,0 +1,148 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary">👥 Gestión de Clientes</h1>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-secondary">🔍 Buscar Clientes</h5>
+            <hr>
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" name="nombre" class="form-control" id="nombre" placeholder="Buscar por nombre" value="{{ request.GET.nombre }}">
+                        <label for="nombre">Nombre</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" name="apellido" class="form-control" id="apellido" placeholder="Buscar por apellido" value="{{ request.GET.apellido }}">
+                        <label for="apellido">Apellido</label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" name="email" class="form-control" id="email" placeholder="Buscar por email" value="{{ request.GET.email }}">
+                        <label for="email">Email</label>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary">🔍 Buscar</button>
+                    <a href="{% url 'clientes' %}" class="btn btn-outline-secondary ms-2">🧹 Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Botón para agregar un nuevo cliente -->
+    <div class="text-end mb-3">
+        <a href="{% url 'crear_cliente' %}" class="btn btn-success">➕ Agregar Cliente</a>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="table-responsive">
+        <table class="table table-hover shadow-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Notas</th>
+                    <th>Fecha Registro</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.id }}</td>
+                    <td>{{ cliente.nombre }}</td>
+                    <td>{{ cliente.apellido }}</td>
+                    <td>{{ cliente.email }}</td>
+                    <td>{{ cliente.telefono }}</td>
+                    <td>{{ cliente.direccion }}</td>
+                    <td>{{ cliente.notas }}</td>
+                    <td>{{ cliente.fecha_registro|date:"d/m/Y H:i" }}</td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <!-- Botón para editar -->
+                            <a href="{% url 'editar_cliente' cliente.id %}" class="btn btn-outline-warning btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar Cliente">
+                                ✏️
+                            </a>
+
+                            <!-- Botón de eliminar solo visible para Gerentes y Superusuarios -->
+                            {% if request.user.role == "Gerente" or request.user.is_superuser %}
+                                <form method="post" action="{% url 'eliminar_cliente' cliente.id %}" onsubmit="return confirm('¿Seguro que quieres eliminar este cliente?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Eliminar Cliente">
+                                        🗑️
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted">⚠️ No hay clientes registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 🔹 Activa los tooltips de Bootstrap -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+
+<!-- 🔹 Paginación Mejorada -->
+{% if clientes.has_other_pages %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if clientes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.apellido %}&apellido={{ request.GET.apellido }}{% endif %}{% if request.GET.email %}&email={{ request.GET.email }}{% endif %}">« Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ clientes.previous_page_number }}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.apellido %}&apellido={{ request.GET.apellido }}{% endif %}{% if request.GET.email %}&email={{ request.GET.email }}{% endif %}">‹ Anterior</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ clientes.number }} de {{ clientes.paginator.num_pages }}</span>
+            </li>
+
+            {% if clientes.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ clientes.next_page_number }}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.apellido %}&apellido={{ request.GET.apellido }}{% endif %}{% if request.GET.email %}&email={{ request.GET.email }}{% endif %}">Siguiente ›</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ clientes.paginator.num_pages }}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.apellido %}&apellido={{ request.GET.apellido }}{% endif %}{% if request.GET.email %}&email={{ request.GET.email }}{% endif %}">Última »</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+

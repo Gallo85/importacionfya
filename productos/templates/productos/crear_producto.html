@@ -1,0 +1,145 @@
+{% extends "core/base.html" %}
+
+{% block title %}🛍️ Crear Producto{% if tipo %} {{ tipo|title }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-primary"><i class="bi bi-plus-circle"></i> Crear Producto {% if tipo %}{{ tipo|title }}{% endif %}</h1>
+
+    <div class="card shadow-lg border-0">
+        <div class="card-body">
+            <h5 class="text-secondary">📋 Completa los datos del producto</h5>
+            <hr>
+
+            <!-- 🔹 Mensajes de error -->
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>⚠️ Error:</strong>
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- 🔹 Formulario -->
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- 🔹 Datos del Producto -->
+                <h5 class="mt-4 text-secondary"><i class="bi bi-box"></i> Datos del Producto</h5>
+                <div class="row g-4">
+                    {% for field in form %}
+                        {% if field.name not in 'precio ubicacion' %}
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ field }}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            </div>
+                            {% if field.errors %}
+                            <div class="text-danger small">{{ field.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- 🔹 Ubicación -->
+                <h5 class="mt-5 text-secondary"><i class="bi bi-geo-alt"></i> Ubicación</h5>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <input type="text" name="ubicacion" id="id_ubicacion" class="form-control" placeholder="Ej: Depósito A - Estante 3">
+                    </div>
+                </div>
+
+                <!-- 🔹 Sección: Precio y Conversión -->
+                <h5 class="mt-5 text-secondary"><i class="bi bi-cash"></i> Precio</h5>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label for="id_precio_dolares" class="form-label">💵 Precio en Dólares (USD)</label>
+                        <input type="number" name="precio_dolares" id="id_precio_dolares" class="form-control" step="0.01" required>
+                        <small class="text-muted">Cotización actual: <strong id="cotizacion_dolar" data-value="{{ dolar_venta }}">{{ dolar_venta }}</strong> ARS/USD</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">💰 Precio en Pesos (ARS)</label>
+                        <input type="text" id="precio_pesos" class="form-control text-success fw-bold" readonly />
+                    </div>
+                </div>
+
+                <!-- 🔹 Sección: Carga de Imágenes con Vista Previa -->
+                <h5 class="mt-5 text-secondary"><i class="bi bi-camera"></i> Fotos del Producto</h5>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="file" name="fotos" id="id_foto" class="form-control" multiple accept="image/png, image/jpeg" onchange="mostrarVistaPrevia()">
+                            <button class="btn btn-outline-primary" type="button" onclick="document.getElementById('id_foto').click();">
+                                <i class="bi bi-upload"></i> Seleccionar Imágenes
+                            </button>
+                        </div>
+                        <div id="vista-previa" class="mt-4"></div>
+                    </div>
+                </div>
+
+                <!-- 🔹 Botones de Acción -->
+                <div class="col-12 text-center mt-5">
+                    <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-circle"></i> Guardar Producto</button>
+                    <a href="{% url 'inventario' %}" class="btn btn-secondary px-4"><i class="bi bi-x-circle"></i> Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 🔹 Script para la Conversión de Precios y Vista Previa de Imágenes -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let inputDolares = document.getElementById("id_precio_dolares");
+        let inputPesos = document.getElementById("precio_pesos");
+        let cotizacionDolarElement = document.getElementById("cotizacion_dolar");
+        let cotizacionDolar = parseFloat(cotizacionDolarElement.getAttribute("data-value")) || 1220;
+
+        function actualizarPrecioPesos() {
+            let precioDolares = parseFloat(inputDolares.value) || 0;
+            inputPesos.value = (precioDolares * cotizacionDolar).toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+        }
+
+        inputDolares.addEventListener("input", actualizarPrecioPesos);
+    });
+
+    function mostrarVistaPrevia() {
+        let input = document.getElementById("id_foto");
+        let vistaPrevia = document.getElementById("vista-previa");
+        vistaPrevia.innerHTML = "";
+
+        if (input.files) {
+            for (let file of input.files) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.className = "img-thumbnail me-2";
+                    img.style.width = "150px";
+                    img.style.height = "150px";
+                    img.style.objectFit = "cover";
+                    vistaPrevia.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+</script>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+

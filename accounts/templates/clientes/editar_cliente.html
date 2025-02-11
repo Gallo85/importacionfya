@@ -1,0 +1,96 @@
+{% extends 'core/base.html' %}
+{% load template_filters %}
+
+{% block title %}Editar Cliente{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-white text-center">
+                    <h3>✏️ Editar Cliente</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Nombre y Apellido -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.nombre|add_class:"form-control" }}
+                                    <label for="{{ form.nombre.id_for_label }}">📛 Nombre</label>
+                                </div>
+                                {% if form.nombre.errors %}
+                                    <div class="text-danger">{{ form.nombre.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.apellido|add_class:"form-control" }}
+                                    <label for="{{ form.apellido.id_for_label }}">👤 Apellido</label>
+                                </div>
+                                {% if form.apellido.errors %}
+                                    <div class="text-danger">{{ form.apellido.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Email y Teléfono -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.email|add_class:"form-control" }}
+                                    <label for="{{ form.email.id_for_label }}">📧 Correo Electrónico</label>
+                                </div>
+                                {% if form.email.errors %}
+                                    <div class="text-danger">{{ form.email.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    {{ form.telefono|add_class:"form-control" }}
+                                    <label for="{{ form.telefono.id_for_label }}">📞 Teléfono</label>
+                                </div>
+                                {% if form.telefono.errors %}
+                                    <div class="text-danger">{{ form.telefono.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                {{ form.direccion|add_class:"form-control" }}
+                                <label for="{{ form.direccion.id_for_label }}">🏠 Dirección</label>
+                            </div>
+                            {% if form.direccion.errors %}
+                                <div class="text-danger">{{ form.direccion.errors|join:" " }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notas -->
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                {{ form.notas|add_class:"form-control" }}
+                                <label for="{{ form.notas.id_for_label }}">📝 Notas</label>
+                            </div>
+                            {% if form.notas.errors %}
+                                <div class="text-danger">{{ form.notas.errors|join:" " }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'clientes' %}" class="btn btn-outline-secondary px-4">❌ Cancelar</a>
+                            <button type="submit" class="btn btn-success px-4">💾 Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

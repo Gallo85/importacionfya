@@ -1,0 +1,20 @@
+
+
+{% block content %}
+<div class="container">
+    
+    <p>Estimado/a {{ factura.cliente.nombre }} {{ factura.cliente.apellido }},</p>
+    <p>Agradecemos su compra en <strong>Importacion FyA</strong>. Adjunto a este correo encontrará su factura correspondiente a la compra realizada el {{ factura.fecha|date:"d/m/Y H:i" }}.</p>
+    
+    <div class="details">
+        <p><strong>Total de la factura: </strong>${{ factura.total }}</p>
+    </div>
+    
+    <p>Si tiene alguna consulta o necesita asistencia adicional, no dude en contactarnos.</p>
+    
+    <div class="footer">
+        <p>Gracias por confiar en <strong>Importacion FyA</strong>. Esperamos atenderle nuevamente pronto.</p>
+    </div>
+
+</div>
+{% endblock %}

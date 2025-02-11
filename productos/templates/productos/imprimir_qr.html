@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprimir QR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        img {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+        .button-container {
+            margin-top: 30px;
+        }
+        .action-button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .action-button:hover {
+            background-color: #0056b3;
+        }
+        .secondary-button {
+            background-color: #6c757d;
+        }
+        .secondary-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR del Producto</h1>
+    {% if producto.qr_code %}
+        <img src="{{ producto.qr_code.url }}" alt="Código QR" width="200">
+    {% else %}
+        <p>No hay código QR disponible.</p>
+    {% endif %}
+    <div class="button-container">
+        <button class="action-button" onclick="window.print()">Imprimir</button>
+        <a href="{% url 'inventario' %}" class="action-button secondary-button">Volver al Inventario</a>
+    </div>
+</body>
+</html>
+

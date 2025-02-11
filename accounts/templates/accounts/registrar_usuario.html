@@ -1,0 +1,86 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Registrar Usuario{% endblock %}
+
+{% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0" style="max-width: 600px; width: 100%; border-radius: 10px;">
+        <div class="card-header bg-primary text-white text-center" style="border-radius: 10px 10px 0 0;">
+            <h3 class="mb-0"><i class="bi bi-person-plus"></i> Registrar Usuario</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted text-center">Complete los datos para registrar un nuevo usuario.</p>
+
+            <!-- Mensajes de error o éxito -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center" role="alert">
+                        <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill text-success{% else %}bi-exclamation-triangle-fill text-danger{% endif %}"></i> 
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Campos del formulario -->
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+                    <div class="input-group">
+                        {{ field }}
+                        {% if field.name in "password1 password2" %}
+                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="{{ field.id_for_label }}">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'dashboard_gerente' %}" class="btn btn-outline-secondary btn-lg px-4">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg px-4">
+                        <i class="bi bi-person-check"></i> Registrar Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+        let forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
+    document.querySelectorAll(".toggle-password").forEach(button => {
+        button.addEventListener("click", function() {
+            let targetId = this.getAttribute("data-target");
+            let input = document.getElementById(targetId);
+            if (input) {
+                input.type = input.type === "password" ? "text" : "password";
+                this.innerHTML = `<i class="bi ${input.type === "password" ? "bi-eye-slash" : "bi-eye"}"></i>`;
+            }
+        });
+    });
+</script>
+{% endblock %}

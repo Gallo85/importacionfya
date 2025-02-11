@@ -1,0 +1,18 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>Bienvenido, {{ user.username }}</h1>
+<p>Tu rol es: <strong>{{ user.role }}</strong></p>
+<div>
+    {% if user.role == 'Gerente' %}
+        <p>Tienes acceso completo al sistema.</p>
+    {% elif user.role == 'Empleado' %}
+        <p>Tienes acceso a módulos básicos, pero no a datos sensibles.</p>
+    {% elif user.role == 'Vendedor' %}
+        <p>Tienes acceso al inventario y a tu perfil personal.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
