@@ -64,10 +64,10 @@ WSGI_APPLICATION = 'Importaciones_fya.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'importacion_fya',  # Nombre de la base de datos en MySQL
-        'USER': 'root',  # Usuario de MySQL
+        'NAME': 'Claudio10$importacionfya',  # Nombre de la base de datos en MySQL
+        'USER': 'Claudio10',  # Usuario de MySQL
         'PASSWORD': 'Brunito_2020',  # Contraseña de MySQL
-        'HOST': 'localhost',  # Para MySQL local, en PythonAnywhere será diferente
+        'HOST': 'Claudio10.mysql.pythonanywhere-services.com',  # Para MySQL local, en PythonAnywhere será diferente
         'PORT': '3306',  # Puerto de MySQL (por defecto)
     }
 }
