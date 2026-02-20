@@ -23,7 +23,7 @@
                 {% for factura in facturas %}
                     <tr class="text-center">
                         <td>{{ factura.id }}</td>
-                        <td>{{ factura.cliente.nombre }} {{ factura.cliente.apellido }}</td>
+                        <td>{% if factura.cliente %}{{ factura.cliente.nombre }} {{ factura.cliente.apellido }}{% else %}(Cliente eliminado){% endif %}</td>
                         <td class="text-end text-primary fw-bold">${{ factura.total|floatformat:2|intcomma }}</td>
                         <td class="text-end text-danger fw-bold">
                             {% if factura.tiene_nc %}

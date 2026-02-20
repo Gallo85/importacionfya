@@ -9,7 +9,7 @@
         <div class="card-body">
             <h5 class="card-title text-secondary">Información de la Factura</h5>
             <hr>
-            <p><strong>Cliente:</strong> {{ factura.cliente }}</p>
+            <p><strong>Cliente:</strong> {{ factura.cliente|default:"(Cliente eliminado)" }}</p>
             <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}</p>
             <p><strong>Cotización del Dólar:</strong> ${{ factura.dolar_venta|floatformat:2|intcomma }}</p>
             <p><strong>Método de Pago:</strong> 
