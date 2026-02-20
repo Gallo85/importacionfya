@@ -49,7 +49,7 @@
                 {% for factura in facturas %}
                     <tr>
                         <td class="text-center">{{ factura.id }}</td>
-                        <td class="text-center">{{ factura.cliente|default:"(Cliente eliminado)" }}</td>
+                        <td class="text-center">{{ factura.cliente }}</td>
                         <td class="text-center">{{ factura.fecha|date:"d/m/Y H:i" }}</td>
                         <td class="text-center text-primary fw-bold">
                             ${{ factura.total|floatformat:2|intcomma|default_if_none:"0,00" }}
