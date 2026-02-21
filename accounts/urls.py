@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import registrar_usuario, listado_usuarios, eliminar_usuario, editar_usuario
+from .views import registrar_usuario, listado_usuarios, eliminar_usuario, editar_usuario, reactivar_usuario
 
 urlpatterns = [
     path('login/', views.user_login, name='login'),
@@ -13,5 +13,6 @@ urlpatterns = [
     path('usuarios/', listado_usuarios, name='listado_usuarios'),
     path('usuarios/editar/<int:pk>/', editar_usuario, name='editar_usuario'),
     path('usuarios/eliminar/<int:pk>/', eliminar_usuario, name='eliminar_usuario'),
+    path('usuarios/reactivar/<int:pk>/', reactivar_usuario, name='reactivar_usuario'),
 ]
     

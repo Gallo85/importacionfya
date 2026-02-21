@@ -166,8 +166,19 @@ def listado_usuarios(request):
 @role_required(['Gerente'])
 def eliminar_usuario(request, pk):
     usuario = get_object_or_404(User, pk=pk)
-    usuario.delete()
-    return redirect('listado_usuarios')  # Redirige al listado después de eliminar
+    usuario.is_active = False
+    usuario.save()
+    messages.success(request, f'Usuario "{usuario.username}" desactivado correctamente. Sus datos se conservaron.')
+    return redirect('listado_usuarios')
+
+@login_required
+@role_required(['Gerente'])
+def reactivar_usuario(request, pk):
+    usuario = get_object_or_404(User, pk=pk)
+    usuario.is_active = True
+    usuario.save()
+    messages.success(request, f'Usuario "{usuario.username}" reactivado correctamente.')
+    return redirect('listado_usuarios')
 
 @login_required
 @role_required(['Gerente'])
