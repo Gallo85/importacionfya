@@ -1,19 +1,15 @@
 {% extends 'core/base.html' %}
 {% load humanize %}
-
 {% block title %}📜 Notas de Crédito{% endblock %}
-
 {% block content %}
 <div class="container mt-5">
     <h1 class="mb-4 text-primary text-left">📜 Notas de Crédito</h1>
-
     <!-- Botón para crear nueva Nota de Crédito -->
     <div class="text-left mb-3">
         <a href="{% url 'facturacion:listar_facturas_para_nota_credito' %}" class="btn btn-primary">
             <i class="bi bi-plus-lg"></i> Nueva Nota de Crédito
         </a>
     </div>
-
     <div class="table-responsive">
         <table class="table table-hover shadow-sm">
             <thead class="table-primary text-center">
@@ -49,7 +45,6 @@
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
                             <a href="{% url 'facturacion:detalle_nota_credito' nota.id %}" class="btn btn-sm btn-info">👁️ Ver</a>
-
                             {% if nota.estado == 'pendiente' %}
                                 <a href="{% url 'facturacion:procesar_nota_credito' nota.id %}" class="btn btn-sm btn-success">✅ Procesar</a>
                                 <a href="{% url 'facturacion:anular_nota_credito' nota.id %}" class="btn btn-sm btn-danger">❌ Anular</a>
@@ -58,7 +53,6 @@
                             {% elif nota.estado == 'anulada' %}
                                 <span class="text-muted">Sin Acción</span>
                             {% endif %}
-
                             <!-- Botón de eliminar (Solo Gerentes) -->
                             {% if user.role == "Gerente" %}
                                 <a href="{% url 'facturacion:eliminar_nota_credito' nota.id %}" class="btn btn-sm btn-outline-danger"
@@ -77,14 +71,34 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Paginación -->
+    {% if notas.has_other_pages %}
+    <nav aria-label="Paginación de notas de crédito">
+        <ul class="pagination justify-content-center mt-4">
+            {% if notas.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">⏮ Primera</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ notas.previous_page_number }}">◀ Anterior</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Página {{ notas.number }} de {{ notas.paginator.num_pages }}</span>
+            </li>
+
+            {% if notas.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ notas.next_page_number }}">Siguiente ▶</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ notas.paginator.num_pages }}">Última ⏭</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 {% endblock %}
-
-
-
-
-
-
-
-
-

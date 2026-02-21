@@ -1,3 +1,4 @@
+# facturacion/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.http import JsonResponse, HttpResponse
@@ -9,7 +10,6 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum, Count, Value, BooleanField, When, Case, F
 from django.utils.dateparse import parse_date
 from decimal import Decimal
-import requests
 
 from .models import Factura, NotaCredito, DetalleFactura
 from .forms import FacturaForm, NotaCreditoForm, DetalleFacturaForm
@@ -17,11 +17,16 @@ from productos.models import Iphone, Mac, Accesorio
 from productos.forms import IphoneForm, MacForm, AccesorioForm
 from accounts.models import Cliente
 from accounts.utils import role_required
-
 from .utils import generar_factura_pdf
 from .enviar_factura_email import enviar_factura_email
 
+# ✅ Cotización robusta (Bluelytics/DolarHoy + cache + fallback)
+from divisas.utils import obtener_dolar_venta_prefer
 
+
+# ============================================================
+# LISTAR FACTURAS
+# ============================================================
 def listar_facturas(request):
     num_factura = request.GET.get('num_factura', '').strip()
     nombre_cliente = request.GET.get('nombre_cliente', '').strip()
@@ -54,48 +59,24 @@ def listar_facturas(request):
         'fecha_factura': fecha_factura,
     })
 
-def obtener_dolar_venta():
-    """
-    Obtiene el valor del dólar venta desde la API configurada.
-    """
-    try:
-        response = requests.get(settings.DOLAR_API_ENDPOINT, timeout=5)
-        response.raise_for_status()
-        datos = response.json()
-        if isinstance(datos, list):
-            for item in datos:
-                if item.get("casa") == "blue":
-                    return float(item.get("venta", 0))
-        return float(datos.get("blue", {}).get("venta", 0))
-    except requests.exceptions.RequestException as e:
-        print(f"Error en la solicitud a la API: {e}")
-        return 0
 
-def obtener_dolar_compra():
-    """
-    Obtiene el valor del dólar compra desde la API configurada.
-    """
-    try:
-        response = requests.get(settings.DOLAR_API_ENDPOINT, timeout=5)
-        response.raise_for_status()
-        datos = response.json()
-        if isinstance(datos, list):
-            for item in datos:
-                if item.get("casa") == "blue":
-                    return float(item.get("compra", 0))
-        return float(datos.get("blue", {}).get("compra", 0))
-    except requests.exceptions.RequestException as e:
-        print(f"Error en la solicitud a la API: {e}")
-        return 0
-
+# ============================================================
+# CREAR FACTURA (sin redirect recursivo)
+# ============================================================
+@login_required
 def crear_factura(request):
     productos = list(Iphone.objects.filter(stock__gt=0)) + list(Mac.objects.filter(stock__gt=0)) + list(Accesorio.objects.filter(stock__gt=0))
-    dolar_venta = obtener_dolar_venta()
-    dolar_compra = obtener_dolar_compra()
 
-    if dolar_venta <= 0 or dolar_compra <= 0:
-        messages.error(request, "No se pudo obtener la cotización del dólar. Intenta nuevamente más tarde.")
-        return redirect('facturacion:crear_factura')
+    # ✅ Dólar estable: prefer DolarHoy con backup Bluelytics; si no hay datos, fallback 1000
+    dolar_venta = obtener_dolar_venta_prefer(prefer="dolarhoy", backup="bluelytics")
+    if not dolar_venta:
+        messages.warning(request, "No se pudo obtener la cotización. Usando valor de respaldo (1000).")
+        dolar_venta = Decimal("1000")
+    else:
+        dolar_venta = Decimal(dolar_venta)
+
+    # Si no tenés compra separada, podés usar un spread simple (ajustalo a gusto)
+    dolar_compra = (dolar_venta * Decimal("0.98")).quantize(Decimal("1.00"))
 
     if request.method == 'POST':
         factura_form = FacturaForm(request.POST)
@@ -104,9 +85,9 @@ def crear_factura(request):
                 with transaction.atomic():
                     productos_ids = request.POST.getlist('productos_ids[]')
                     cantidades = request.POST.getlist('cantidades[]')
-                    pago_pesos = Decimal(request.POST.get('pago_pesos', 0))
-                    pago_dolares = Decimal(request.POST.get('pago_dolares', 0)) * Decimal(dolar_compra)
-                    vuelto_entregado = request.POST.get('vuelto_entregado') == 'on'  # ✅ Checkbox para el vuelto
+                    pago_pesos = Decimal(request.POST.get('pago_pesos', 0) or 0)
+                    pago_dolares = Decimal(request.POST.get('pago_dolares', 0) or 0) * dolar_venta
+                    vuelto_entregado = request.POST.get('vuelto_entregado') == 'on'
 
                     errores_stock = []
                     productos_seleccionados = {}
@@ -136,32 +117,33 @@ def crear_factura(request):
                     if errores_stock:
                         for error in errores_stock:
                             messages.error(request, error)
-                        return redirect('facturacion:crear_factura')
+                        # ⚠️ Render directo (no redirect a la misma vista)
+                        return render(request, 'facturacion/crear_factura.html', {
+                            'factura_form': factura_form,
+                            'productos': productos,
+                            'dolar_venta': dolar_venta,
+                            'dolar_compra': dolar_compra,
+                        })
 
                     # Crear la factura
                     factura = factura_form.save(commit=False)
-                    factura.dolar_venta = Decimal(dolar_venta)
-                    factura.dolar_compra = Decimal(dolar_compra)
+                    factura.dolar_venta = dolar_venta
+                    factura.dolar_compra = dolar_compra
                     factura.vuelto_entregado = vuelto_entregado
                     factura.save()
 
                     total_factura = Decimal(0)
 
-                    # Crear los detalles de la factura
+                    # Crear los detalles de la factura y actualizar stock
                     for producto_id, cantidad in zip(productos_ids, cantidades):
                         cantidad_int = int(cantidad)
                         producto = productos_seleccionados.get(int(producto_id))
 
                         if producto:
                             precio_dolares = producto.precio
-                            precio_pesos = precio_dolares * Decimal(dolar_venta)
-                            subtotal = precio_pesos * cantidad_int
+                            precio_pesos = (precio_dolares * dolar_venta).quantize(Decimal("1.00"))
+                            subtotal = (precio_pesos * cantidad_int).quantize(Decimal("1.00"))
 
-                            # Reducir stock del producto
-                            producto.stock -= cantidad_int
-                            producto.save()
-
-                            # Crear el detalle de la factura
                             detalle_factura_data = {
                                 "factura": factura,
                                 "precio_unitario": precio_pesos,
@@ -169,7 +151,6 @@ def crear_factura(request):
                                 "subtotal": subtotal,
                             }
 
-                            # Asignar el producto al campo correcto
                             if isinstance(producto, Iphone):
                                 detalle_factura_data["producto_iphone"] = producto
                             elif isinstance(producto, Mac):
@@ -180,21 +161,36 @@ def crear_factura(request):
                             DetalleFactura.objects.create(**detalle_factura_data)
                             total_factura += subtotal
 
+                            # Reducir el stock del producto
+                            producto.stock -= cantidad_int
+                            producto.save()
+
                     # Actualizar totales de la factura
-                    factura.total = total_factura
-                    total_pagado = pago_pesos + pago_dolares
-                    vuelto = max(Decimal(0), total_pagado - total_factura)
+                    factura.total = total_factura.quantize(Decimal("1.00"))
+                    total_pagado = (pago_pesos + pago_dolares).quantize(Decimal("1.00"))
+                    vuelto = max(Decimal(0), total_pagado - factura.total).quantize(Decimal("1.00"))
 
                     factura.total_pagado = total_pagado
                     factura.vuelto = vuelto
                     factura.save()
 
-                    messages.success(request, f"Factura creada con total de ${factura.total:.2f} ARS. Vuelto: ${vuelto:.2f} ARS. {'Vuelto entregado' if vuelto_entregado else 'Vuelto pendiente'}")
+                    messages.success(
+                        request,
+                        f"Factura creada con total de ${factura.total:.2f} ARS. "
+                        f"Vuelto: ${vuelto:.2f} ARS. "
+                        f"{'Vuelto entregado' if vuelto_entregado else 'Vuelto pendiente'}"
+                    )
                     return redirect('facturacion:listar_facturas')
 
             except Exception as e:
                 messages.error(request, f"Error al crear la factura: {e}")
-                return redirect('facturacion:crear_factura')
+                # ⚠️ Render directo (no redirect a la misma vista)
+                return render(request, 'facturacion/crear_factura.html', {
+                    'factura_form': factura_form,
+                    'productos': productos,
+                    'dolar_venta': dolar_venta,
+                    'dolar_compra': dolar_compra,
+                })
 
         else:
             messages.error(request, "Errores en el formulario.")
@@ -209,14 +205,12 @@ def crear_factura(request):
     })
 
 
-
+# ============================================================
+# DETALLE FACTURA
+# ============================================================
 def detalle_factura(request, factura_id):
     factura = get_object_or_404(Factura, id=factura_id)
     detalles = factura.detalles.all()
-
-    print(f"Factura ID: {factura.id}, Total: {factura.total}")
-    print(f"Vuelto: {factura.vuelto}")
-    print("Detalles asociados:")
 
     # Ajustamos para obtener el nombre correcto del producto
     detalles_con_nombre = []
@@ -230,8 +224,6 @@ def detalle_factura(request, factura_id):
         else:
             nombre_producto = "Producto Desconocido"
 
-        print(f"- Producto: {nombre_producto}, Cantidad: {detalle.cantidad}, Subtotal: {detalle.subtotal}")
-
         detalles_con_nombre.append({
             "nombre": nombre_producto,
             "precio_unitario": detalle.precio_unitario,
@@ -241,13 +233,15 @@ def detalle_factura(request, factura_id):
 
     return render(request, 'facturacion/detalle_factura.html', {
         'factura': factura,
-        'detalles': detalles_con_nombre,
-        'vuelto': factura.vuelto,  # ✅ Agregar el vuelto
-        'vuelto_entregado': factura.vuelto_entregado,  # ✅ Estado del vuelto
+        'detalles': detalles,
+        'vuelto': factura.vuelto,
+        'vuelto_entregado': factura.vuelto_entregado,
     })
 
 
-
+# ============================================================
+# AGREGAR DETALLE A FACTURA
+# ============================================================
 def agregar_detalle_factura(request, factura_id):
     factura = get_object_or_404(Factura, id=factura_id)
     if request.method == 'POST':
@@ -262,18 +256,9 @@ def agregar_detalle_factura(request, factura_id):
     return render(request, 'facturacion/agregar_detalle_factura.html', {'form': form, 'factura': factura})
 
 
-def listar_notas_credito(request):
-    notas_credito = NotaCredito.objects.all().order_by('-fecha')
-    return render(request, 'facturacion/listar_notas_credito.html', {'notas_credito': notas_credito})
-
-@login_required
-@role_required(['Gerente'])
-def eliminar_factura(request, factura_id):
-    factura = get_object_or_404(Factura, id=factura_id)
-    factura.delete()
-    return redirect('facturacion:listar_facturas')
-
-
+# ============================================================
+# TOTAL VENTAS (con NC descontadas)
+# ============================================================
 def total_ventas(request):
     page_number = request.GET.get('page', 1)  # Página actual, por defecto 1
 
@@ -297,7 +282,7 @@ def total_ventas(request):
             factura.metodo_pago = "Pesos"
 
     # Paginación: 10 facturas por página
-    paginator = Paginator(facturas_query, 10)  
+    paginator = Paginator(facturas_query, 10)
     facturas_paginadas = paginator.get_page(page_number)
 
     # Calcular el Total de Ventas Ajustado (Ventas - Notas de Crédito)
@@ -306,14 +291,17 @@ def total_ventas(request):
         total_nc=Sum('notacredito__monto', default=0)
     )
 
-    total_ventas = total_ventas_ajustado["total_ventas"] - total_ventas_ajustado["total_nc"]
+    total_ventas_val = (total_ventas_ajustado["total_ventas"] or 0) - (total_ventas_ajustado["total_nc"] or 0)
 
     return render(request, "facturacion/total_ventas.html", {
-        "facturas": facturas_paginadas,  # 🔹 Ahora es un objeto paginado
-        "total_ventas": total_ventas,
+        "facturas": facturas_paginadas,  # 🔹 Objeto paginado
+        "total_ventas": total_ventas_val,
     })
 
 
+# ============================================================
+# BÚSQUEDA DE PRODUCTOS (AJAX)
+# ============================================================
 def buscar_productos(request):
     if request.method == 'GET' and 'q' in request.GET:
         query = request.GET.get('q', '').strip()
@@ -343,7 +331,7 @@ def buscar_productos(request):
             ])
 
             productos.extend([
-                {'id': accesorio['id'], 'nombre': f'Accesorio {accesorio["tipo"]} - {accesorio["modelo"]}', 
+                {'id': accesorio['id'], 'nombre': f'Accesorio {accesorio["tipo"]} - {accesorio["modelo"]}',
                  'precio': str(accesorio['precio']), 'imei': 'N/A', 'stock': accesorio['stock']}
                 for accesorio in accesorios
             ])
@@ -353,9 +341,22 @@ def buscar_productos(request):
     return JsonResponse({'error': 'Método no permitido'}, status=400)
 
 
+# ============================================================
+# NOTAS DE CRÉDITO (CRUD + detalle)
+# ============================================================
 def listar_notas_credito(request):
-    notas = NotaCredito.objects.all()
-    return render(request, 'facturacion/listar_notas_credito.html', {'notas': notas})
+    page_number = request.GET.get('page', 1)
+
+    # Obtener todas las notas de crédito
+    notas_query = NotaCredito.objects.all().order_by('-fecha')
+
+    # Paginación: 10 notas por página
+    paginator = Paginator(notas_query, 10)
+    notas_paginadas = paginator.get_page(page_number)
+
+    return render(request, 'facturacion/listar_notas_credito.html', {
+        'notas': notas_paginadas  # ← Nombre correcto para el template
+    })
 
 def crear_nota_credito(request, factura_id):
     factura = get_object_or_404(Factura, id=factura_id)
@@ -392,15 +393,9 @@ def procesar_nota_credito(request, nota_id):
     nota = get_object_or_404(NotaCredito, id=nota_id)
     try:
         if nota.estado == 'pendiente':
-            print(f"Procesando Nota de Crédito #{nota.id} para Factura #{nota.factura.id}")
-            
-            # Verificar los detalles de la factura antes de procesar
-            detalles_factura = nota.factura.detalles.all()
-            for detalle in detalles_factura:
-                producto = detalle.producto_iphone or detalle.producto_mac or detalle.producto_accesorio
-                print(f"Detalle: {detalle.id} - Producto: {producto.modelo if producto else 'No encontrado'} - Cantidad: {detalle.cantidad}")
-
-            nota.procesar()  # Llama al método de procesamiento
+            # (opcional) logging de inspección previa
+            _ = list(nota.factura.detalles.all())
+            nota.procesar()  # Lógica en el modelo
             messages.success(request, f"Nota de Crédito #{nota.id} procesada correctamente. Productos devueltos al inventario.")
         else:
             messages.warning(request, "La nota de crédito ya fue procesada o anulada.")
@@ -408,10 +403,8 @@ def procesar_nota_credito(request, nota_id):
         messages.error(request, str(e))
     except Exception as e:
         messages.error(request, f"Error inesperado: {str(e)}")
-    
+
     return redirect('facturacion:listar_notas_credito')
-
-
 
 
 def anular_nota_credito(request, nota_id):
@@ -421,11 +414,9 @@ def anular_nota_credito(request, nota_id):
     """
     nota = get_object_or_404(NotaCredito, id=nota_id)
     try:
-        # Llamar al método anular que maneja la lógica del inventario
         nota.anular()
         messages.success(request, f"La Nota de Crédito #{nota.id} ha sido anulada correctamente. Cambios revertidos en el inventario.")
     except ValueError as e:
-        # Manejar errores, como si la nota ya estaba anulada
         messages.error(request, str(e))
     return redirect('facturacion:listar_notas_credito')
 
@@ -448,6 +439,18 @@ def detalle_nota_credito(request, nota_id):
         'factura': factura,
         'detalles': detalles,
     })
+
+
+# ============================================================
+# ELIMINACIONES / CAJA
+# ============================================================
+@login_required
+@role_required(['Gerente'])
+def eliminar_factura(request, factura_id):
+    factura = get_object_or_404(Factura, id=factura_id)
+    factura.delete()
+    return redirect('facturacion:listar_facturas')
+
 
 @login_required
 @role_required(['Gerente'])
@@ -474,7 +477,7 @@ def caja_diaria(request):
         facturas_query = facturas_query.filter(fecha__date__lte=parse_date(fecha_fin))
 
     # Paginación: 10 facturas por página
-    paginator = Paginator(facturas_query, 10)  
+    paginator = Paginator(facturas_query, 10)
     facturas_paginadas = paginator.get_page(page_number)
 
     # Calcular total de pesos y dólares
@@ -482,7 +485,7 @@ def caja_diaria(request):
     total_dolares = facturas_query.aggregate(total=Sum('pago_dolares'))['total'] or 0
 
     return render(request, "facturacion/caja_diaria.html", {
-        "caja_diaria": facturas_paginadas,  
+        "caja_diaria": facturas_paginadas,
         "total_pesos": total_pesos,
         "total_dolares": total_dolares,
         "fecha_inicio": fecha_inicio if fecha_inicio and fecha_inicio != 'None' else '',
@@ -490,23 +493,25 @@ def caja_diaria(request):
     })
 
 
-# Vista para generar el PDF
+# ============================================================
+# PDF y ENVÍO POR EMAIL
+# ============================================================
 def imprimir_factura(request, factura_id):
     factura = get_object_or_404(Factura, id=factura_id)
     pdf_file = generar_factura_pdf(factura)
 
     response = HttpResponse(pdf_file.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="factura_{factura.id}.pdf"'  # ✅ Mantiene el PDF en una pestaña nueva
+    response['Content-Disposition'] = f'inline; filename="factura_{factura.id}.pdf"'  # ✅ Abre en pestaña
     return response
 
-# Vista para enviar el email
+
 def enviar_factura_email_view(request, factura_id):
     factura = get_object_or_404(Factura, id=factura_id)
 
     if request.method == 'POST':
         enviar_factura_email(factura)
         messages.success(request, f'Factura {factura.id} enviada correctamente.')
-        return redirect('facturacion:listar_facturas')  # 🔹 Ahora redirige a la lista de facturas
+        return redirect('facturacion:listar_facturas')
 
     messages.error(request, 'No se pudo enviar el correo.')
     return redirect('facturacion:listar_facturas')

@@ -41,13 +41,13 @@
                     <div class="col-md-4">
                         <label for="pago_dolares" class="form-label">Pago en Dólares</label>
                         <input type="text" id="pago_dolares" name="pago_dolares" class="form-control formato-precio text-center" value="0">
-                        <small class="text-muted">Dólar Compra: <strong id="cotizacion_dolar_compra" data-value="{{ dolar_compra|default:1 }}">{{ dolar_compra|default:1 }}</strong> ARS/USD</small>
+                        <small class="text-muted">Dólar Venta: <strong id="cotizacion_dolar_venta" data-value="{{ dolar_venta|default:1 }}">{{ dolar_venta|default:1 }}</strong> ARS/USD</small>
                     </div>
                     <div class="col-md-4">
                         <label for="total" class="form-label">Total (ARS)</label>
                         <input type="text" id="total" class="form-control text-success fw-bold text-center" readonly>
                     </div>
-                    
+
                     <div class="col-md-4">
                         <label for="vuelto" class="form-label">Vuelto (ARS)</label>
                         <input type="text" id="vuelto" class="form-control text-danger fw-bold text-center" readonly>
@@ -65,7 +65,7 @@
                         ¿Vuelto entregado?
                     </label>
                 </div>
-            
+
                 <!-- ✅ Botones dentro del formulario -->
                 <div class="text-center mt-4">
                     <button type="submit" class="btn btn-success">Guardar</button>
@@ -79,7 +79,7 @@
     const totalInput = document.getElementById("total");
     const pagoPesosInput = document.getElementById("pago_pesos");
     const pagoDolaresInput = document.getElementById("pago_dolares");
-    const cotizacionDolarCompra = parseFloat(document.getElementById("cotizacion_dolar_compra").getAttribute("data-value"));
+    const cotizacionDolarVenta = parseFloat(document.getElementById("cotizacion_dolar_venta").getAttribute("data-value"));
     const dolarVenta = parseFloat("{{ dolar_venta|default:1 }}");
     const productosLista = document.getElementById("productos-lista");
     const agregarProductoBtn = document.getElementById("agregar-producto");
@@ -90,21 +90,21 @@
     }
 
     function actualizarTotal() {
-        let total = 0;
-        document.querySelectorAll(".subtotal-input").forEach(input => {
-            total += parseFloat(input.value.replace(/\./g, "").replace(",", ".")) || 0;
-        });
+       let total = 0;
+       document.querySelectorAll(".subtotal-input").forEach(input => {
+           total += parseFloat(input.value.replace(/[^0-9,]/g, "").replace(",", ".")) || 0; // Limpiar y convertir número
+       });
 
-        let pagoPesos = parseFloat(pagoPesosInput.value.replace(/\./g, "").replace(",", ".")) || 0;
-        let pagoDolares = parseFloat(pagoDolaresInput.value.replace(/\./g, "").replace(",", ".")) || 0;
-        let pagoDolaresEnPesos = pagoDolares * cotizacionDolarCompra;
-        let totalPagado = pagoPesos + pagoDolaresEnPesos;
-        
-        let totalRestante = total - totalPagado;
-        let vuelto = totalPagado > total ? totalPagado - total : 0;
+       let pagoPesos = parseFloat(pagoPesosInput.value.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
+       let pagoDolares = parseFloat(pagoDolaresInput.value.replace(/[^0-9,]/g, "").replace(",", ".")) || 0;
+       let pagoDolaresEnPesos = pagoDolares * cotizacionDolarVenta;
+       let totalPagado = pagoPesos + pagoDolaresEnPesos;
 
-        totalInput.value = `$${formatPrice(totalRestante > 0 ? totalRestante : 0)}`;
-        vueltoInput.value = `$${formatPrice(vuelto)}`;
+       let totalRestante = total - totalPagado;
+       let vuelto = totalPagado > total ? totalPagado - total : 0;
+
+       totalInput.value = `$${formatPrice(totalRestante > 0 ? totalRestante : 0)}`;
+       vueltoInput.value = `$${formatPrice(vuelto)}`;
     }
 
     pagoPesosInput.addEventListener("input", actualizarTotal);
@@ -154,15 +154,20 @@
                                 item.dataset.imei = producto.imei;
 
                                 item.addEventListener("click", function () {
-                                    productoInput.value = `${producto.nombre} (IMEI: ${producto.imei})`; // Muestra el nombre con el IMEI
-                                    row.querySelector(".producto-id").value = producto.id;
-                                    cantidadInput.value = 1;
-                                    subtotalInput.value = formatPrice(item.dataset.precio);
-                                    actualizarTotal();
+                                productoInput.value = `${producto.nombre} (IMEI: ${producto.imei})`;
+                                row.querySelector(".producto-id").value = producto.id;
 
-                                    resultadoBusqueda.innerHTML = "";
-                                    resultadoBusqueda.style.display = "none";
-                                });
+                                // Guarda el precio en pesos en el dataset
+                                productoInput.dataset.precio = item.dataset.precio;
+
+                                cantidadInput.value = 1;
+                                subtotalInput.value = formatPrice(parseFloat(item.dataset.precio)); // Establece el subtotal inicial
+
+                                actualizarTotal();
+
+                                resultadoBusqueda.innerHTML = "";
+                                resultadoBusqueda.style.display = "none";
+                            });
 
                                 resultadoBusqueda.appendChild(item);
                             });
@@ -174,8 +179,8 @@
 
         cantidadInput.addEventListener("input", function () {
             const cantidad = parseInt(cantidadInput.value) || 0;
-            const precio = parseFloat(row.querySelector(".producto-id").value) || 0;
-            subtotalInput.value = formatPrice(cantidad * precio);
+            const precioEnPesos = parseFloat(productoInput.dataset.precio) || 0;  // Obtener el precio en pesos correctamente
+            subtotalInput.value = formatPrice(cantidad * precioEnPesos);  // Multiplicar precio en pesos por la cantidad
             actualizarTotal();
         });
 
@@ -188,6 +193,7 @@
 
 </script>
 {% endblock %}
+
 
 
 

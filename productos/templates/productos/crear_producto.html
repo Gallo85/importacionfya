@@ -11,7 +11,6 @@
             <h5 class="text-secondary">📋 Completa los datos del producto</h5>
             <hr>
 
-            <!-- 🔹 Mensajes de error -->
             {% if form.errors %}
             <div class="alert alert-danger">
                 <strong>⚠️ Error:</strong>
@@ -25,15 +24,13 @@
             </div>
             {% endif %}
 
-            <!-- 🔹 Formulario -->
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                <!-- 🔹 Datos del Producto -->
                 <h5 class="mt-4 text-secondary"><i class="bi bi-box"></i> Datos del Producto</h5>
                 <div class="row g-4">
                     {% for field in form %}
-                        {% if field.name not in 'precio ubicacion' %}
+                        {% if field.name not in 'precio ubicacion numero_orden proveedor costo' %}
                         <div class="col-md-6">
                             <div class="form-floating">
                                 {{ field }}
@@ -47,7 +44,6 @@
                     {% endfor %}
                 </div>
 
-                <!-- 🔹 Ubicación -->
                 <h5 class="mt-5 text-secondary"><i class="bi bi-geo-alt"></i> Ubicación</h5>
                 <div class="row g-4">
                     <div class="col-md-6">
@@ -55,13 +51,17 @@
                     </div>
                 </div>
 
-                <!-- 🔹 Sección: Precio y Conversión -->
                 <h5 class="mt-5 text-secondary"><i class="bi bi-cash"></i> Precio</h5>
                 <div class="row g-4">
                     <div class="col-md-6">
                         <label for="id_precio_dolares" class="form-label">💵 Precio en Dólares (USD)</label>
                         <input type="number" name="precio_dolares" id="id_precio_dolares" class="form-control" step="0.01" required>
-                        <small class="text-muted">Cotización actual: <strong id="cotizacion_dolar" data-value="{{ dolar_venta }}">{{ dolar_venta }}</strong> ARS/USD</small>
+                        <small class="text-muted">
+                          Cotización actual:
+                          <strong id="cotizacion_dolar" data-value="{{ dolar_venta|floatformat:'2'|default_if_none:'' }}">
+                            {{ dolar_venta|floatformat:'2'|default_if_none:'—' }}
+                          </strong> ARS/USD
+                        </small>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">💰 Precio en Pesos (ARS)</label>
@@ -69,7 +69,27 @@
                     </div>
                 </div>
 
-                <!-- 🔹 Sección: Carga de Imágenes con Vista Previa -->
+                <!-- ✅ SOLO VISIBLE PARA GERENTES -->
+                {% if user.is_authenticated and user.role == "Gerente" %}
+                <h5 class="mt-5 text-secondary"><i class="bi bi-lock"></i> Información Confidencial</h5>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label for="id_numero_orden" class="form-label">📅 N° de Orden</label>
+                        <input type="text" name="numero_orden" id="id_numero_orden"
+                               class="form-control" placeholder="DD/MM/AAAA"
+                               value="{{ form.numero_orden.value|default:'' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.proveedor.id_for_label }}" class="form-label">🏭 Proveedor</label>
+                        {{ form.proveedor }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.costo.id_for_label }}" class="form-label">💲 Costo (USD)</label>
+                        {{ form.costo }}
+                    </div>
+                </div>
+                {% endif %}
+
                 <h5 class="mt-5 text-secondary"><i class="bi bi-camera"></i> Fotos del Producto</h5>
                 <div class="row g-4">
                     <div class="col-md-6">
@@ -83,7 +103,6 @@
                     </div>
                 </div>
 
-                <!-- 🔹 Botones de Acción -->
                 <div class="col-12 text-center mt-5">
                     <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-circle"></i> Guardar Producto</button>
                     <a href="{% url 'inventario' %}" class="btn btn-secondary px-4"><i class="bi bi-x-circle"></i> Cancelar</a>
@@ -93,47 +112,79 @@
     </div>
 </div>
 
-<!-- 🔹 Script para la Conversión de Precios y Vista Previa de Imágenes -->
+<!-- 🔹 JavaScript para Formato de Fecha y Conversión Automática -->
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        let inputDolares = document.getElementById("id_precio_dolares");
-        let inputPesos = document.getElementById("precio_pesos");
-        let cotizacionDolarElement = document.getElementById("cotizacion_dolar");
-        let cotizacionDolar = parseFloat(cotizacionDolarElement.getAttribute("data-value")) || 1220;
+  document.addEventListener("DOMContentLoaded", function() {
+    const inputDolares = document.getElementById("id_precio_dolares");
+    const inputPesos   = document.getElementById("precio_pesos");
+    const cotEl        = document.getElementById("cotizacion_dolar");
 
-        function actualizarPrecioPesos() {
-            let precioDolares = parseFloat(inputDolares.value) || 0;
-            inputPesos.value = (precioDolares * cotizacionDolar).toLocaleString("es-AR", { style: "currency", currency: "ARS" });
-        }
-
-        inputDolares.addEventListener("input", actualizarPrecioPesos);
-    });
-
-    function mostrarVistaPrevia() {
-        let input = document.getElementById("id_foto");
-        let vistaPrevia = document.getElementById("vista-previa");
-        vistaPrevia.innerHTML = "";
-
-        if (input.files) {
-            for (let file of input.files) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    let img = document.createElement("img");
-                    img.src = e.target.result;
-                    img.className = "img-thumbnail me-2";
-                    img.style.width = "150px";
-                    img.style.height = "150px";
-                    img.style.objectFit = "cover";
-                    vistaPrevia.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+    // Normaliza "1.445,00" -> "1445.00" y convierte a Number sin inventar valores
+    function parseCotizacion(el) {
+      if (!el) return NaN;
+      const raw = (el.getAttribute("data-value") || "").trim();
+      if (!raw) return NaN;
+      // quitar espacios (incluye espacios finos), quitar separadores de miles ".", y usar "." como decimal
+      const norm = raw
+        .replace(/\u202f/g, "")   // espacio fino
+        .replace(/\s/g, "")       // espacios
+        .replace(/\./g, "")       // miles
+        .replace(",", ".");       // decimal
+      const n = Number(norm);
+      return Number.isFinite(n) && n > 0 ? n : NaN;
     }
+
+    const cotizacionDolar = parseCotizacion(cotEl); // NaN si no hay dato válido
+
+    function actualizarPrecioPesos() {
+      const usd = Number(inputDolares.value);
+      if (!Number.isFinite(usd) || usd <= 0 || !Number.isFinite(cotizacionDolar)) {
+        inputPesos.value = ""; // sin cálculo si no hay cotización válida o USD vacío
+        return;
+      }
+      const ars = usd * cotizacionDolar;
+      inputPesos.value = ars.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ARS";
+    }
+
+    inputDolares.addEventListener("input", actualizarPrecioPesos);
+    actualizarPrecioPesos(); // por si hay valor precargado
+
+    // ---- Fecha N° de Orden (igual que tenías) ----
+    const fechaInput = document.getElementById("id_numero_orden");
+    if (fechaInput) {
+      fechaInput.addEventListener("blur", function() {
+        const valor = (fechaInput.value || "").trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+          const [y, m, d] = valor.split("-");
+          fechaInput.value = `${d}/${m}/${y}`;
+        }
+      });
+    }
+  });
+
+  function mostrarVistaPrevia() {
+    const input = document.getElementById("id_foto");
+    const vistaPrevia = document.getElementById("vista-previa");
+    vistaPrevia.innerHTML = "";
+    if (input && input.files) {
+      for (const file of input.files) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.className = "img-thumbnail me-2";
+          img.style.width = "150px";
+          img.style.height = "150px";
+          img.style.objectFit = "cover";
+          vistaPrevia.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  }
 </script>
 
 {% endblock %}
-
 
 
 

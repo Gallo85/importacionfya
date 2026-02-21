@@ -81,6 +81,25 @@
                             {% endif %}
                         </div>
 
+                        <!-- Vendedor (Solo editable por Gerentes) -->
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <select name="vendedor" id="id_vendedor" class="form-select"
+                                    {% if not request.user.is_superuser and request.user.role != "Gerente" %}disabled{% endif %}>
+                                    <option value="" selected>Seleccione un vendedor</option>
+                                    {% for vendedor in form.vendedor.field.queryset %}
+                                        <option value="{{ vendedor.id }}" {% if vendedor.id == form.vendedor.value %}selected{% endif %}>
+                                            {{ vendedor.username }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="id_vendedor">🛒 Vendedor Asignado</label>
+                            </div>
+                            {% if form.vendedor.errors %}
+                                <div class="text-danger">{{ form.vendedor.errors|join:" " }}</div>
+                            {% endif %}
+                        </div>
+
                         <!-- Botones -->
                         <div class="d-flex justify-content-between mt-4">
                             <a href="{% url 'clientes' %}" class="btn btn-outline-secondary px-4">❌ Cancelar</a>
@@ -93,4 +112,5 @@
     </div>
 </div>
 {% endblock %}
+
 

@@ -1,76 +1,104 @@
-<div class="d-flex">
-    <!-- Sidebar -->
-    <div class="d-flex flex-column flex-shrink-0 p-3 bg-dark text-white shadow-lg sidebar" style="min-height: 100%;">
-        <h3 class="text-left mb-4"> Menú</h3>
-        <ul class="nav nav-pills flex-column mb-auto">
-            
-            {% if user.role == 'Gerente' %}
-                <li class="nav-item">
-                    <a href="{% url 'dashboard_gerente' %}" class="nav-link text-white hover-style d-flex align-items-center">
-                        <i class="bi bi-bar-chart-fill me-2"></i> Dashboard
-                    </a>
-                </li>
+<div class="sidebar-wrapper bg-dark text-white shadow-lg" id="sidebar">
+    <div class="d-flex flex-column h-100">
 
-                <!-- 🔹 Dropdown de Crear Producto alineado a la izquierda -->
-                <li class="nav-item">
-                    <a class="nav-link text-white hover-style d-flex align-items-center" href="#" data-bs-toggle="collapse" data-bs-target="#crearProductoDropdown">
-                        <i class="bi bi-plus-circle-fill me-2"></i> Crear Producto
-                    </a>
-                    <ul class="collapse list-unstyled ps-0" id="crearProductoDropdown">
-                        <li><a href="{% url 'crear_producto' 'iphone' %}" class="nav-link text-white hover-style ms-4"><i class="bi bi-phone-fill me-2"></i> iPhone</a></li>
-                        <li><a href="{% url 'crear_producto' 'mac' %}" class="nav-link text-white hover-style ms-4"><i class="bi bi-laptop-fill me-2"></i> Mac</a></li>
-                        <li><a href="{% url 'crear_producto' 'accesorio' %}" class="nav-link text-white hover-style ms-4"><i class="bi bi-plug-fill me-2"></i> Accesorio</a></li>
-                    </ul>
-                </li>
+        <!-- 🔹 Encabezado y botón cerrar -->
+        <div class="p-3 border-bottom border-secondary">
+            <div class="d-lg-none text-end">
+                <button class="btn btn-sm btn-light" onclick="document.getElementById('sidebar').classList.remove('show'); document.body.classList.remove('sidebar-open')">
+                    <i class="bi bi-x-lg"></i> Cerrar
+                </button>
+            </div>
+            <h3 class="text-start text-uppercase fw-bold mt-2 text-light" style="letter-spacing: 1px; font-size: 1.3rem;">
+                Menú
+            </h3>
+        </div>
 
-                <li><a href="{% url 'inventario' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-box-seam-fill me-2"></i> Inventario</a></li>
-                <li><a href="{% url 'clientes' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-people-fill me-2"></i> Clientes</a></li>
-                <li><a href="{% url 'facturacion:listar_facturas' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-receipt-cutoff me-2"></i> Facturación</a></li>
-                <li><a href="{% url 'facturacion:listar_notas_credito' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-arrow-left-right me-2"></i> Notas de Crédito</a></li>
-                <li><a href="{% url 'facturacion:total_ventas' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-cash me-2"></i> Total de Ventas</a></li>
-                <li><a href="{% url 'facturacion:caja_diaria' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-piggy-bank-fill me-2"></i> Caja Diaria</a></li>
-                <li class="nav-item">
-                    <a href="{% url 'listado_usuarios' %}" class="nav-link text-white hover-style d-flex align-items-center">
-                        <i class="bi bi-people-fill me-2"></i> Listado de Usuarios
-                    </a>
-                </li>
-            {% elif user.role == 'Empleado' %}
-                <li><a href="{% url 'inventario' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-box-seam-fill me-2"></i> Inventario</a></li>
-                <li><a href="{% url 'clientes' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-people-fill me-2"></i> Clientes</a></li>
-                <li><a href="{% url 'facturacion:listar_facturas' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-receipt-cutoff me-2"></i> Facturación</a></li>
-                <li><a href="{% url 'facturacion:listar_notas_credito' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-arrow-left-right me-2"></i> Notas de Crédito</a></li>
-            
-            {% elif user.role|lower == 'vendedor' %}
-                <li><a href="{% url 'dashboard_vendedor' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-bar-chart-fill me-2"></i> Dashboard</a></li>
-                <li><a href="{% url 'inventario' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-box-seam-fill me-2"></i> Inventario</a></li>
-                <li><a href="{% url 'editar_perfil' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-pencil-square me-2"></i> Editar Perfil</a></li>
-            {% endif %}
-        </ul>
+        <!-- 🔹 Menú scrollable -->
+        <div class="flex-grow-1 overflow-auto p-3">
+            <ul class="nav nav-pills flex-column mb-auto">
+                {% if user.role == 'Gerente' %}
+                    <li class="nav-item">
+                        <a href="{% url 'dashboard_gerente' %}" class="nav-link text-white hover-style d-flex align-items-center">
+                            <i class="bi bi-bar-chart-fill me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white hover-style d-flex align-items-center" href="#" data-bs-toggle="collapse" data-bs-target="#crearProductoDropdown">
+                            <i class="bi bi-plus-circle-fill me-2"></i> Crear Producto
+                        </a>
+                        <ul class="collapse list-unstyled ps-0" id="crearProductoDropdown">
+                            <li><a href="{% url 'crear_producto' 'iphone' %}" class="nav-link text-white hover-style ms-4"><i class="bi bi-phone-fill me-2"></i> iPhone</a></li>
+                            <li><a href="{% url 'crear_producto' 'mac' %}" class="nav-link text-white hover-style ms-4"><i class="bi bi-laptop-fill me-2"></i> Mac</a></li>
+                            <li><a href="{% url 'crear_producto' 'accesorio' %}" class="nav-link text-white hover-style ms-4"><i class="bi bi-plug-fill me-2"></i> Accesorio</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="{% url 'inventario' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-box-seam-fill me-2"></i> Inventario</a></li>
+                    <li><a href="{% url 'clientes' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-people-fill me-2"></i> Clientes</a></li>
+                    <li><a href="{% url 'facturacion:listar_facturas' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-receipt-cutoff me-2"></i> Facturación</a></li>
+                    <li><a href="{% url 'facturacion:listar_notas_credito' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-arrow-left-right me-2"></i> Notas de Crédito</a></li>
+                    <li><a href="{% url 'facturacion:total_ventas' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-cash me-2"></i> Total de Ventas</a></li>
+                    <li><a href="{% url 'facturacion:caja_diaria' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-piggy-bank-fill me-2"></i> Caja Diaria</a></li>
+                    <li><a href="{% url 'listado_usuarios' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-people-fill me-2"></i> Listado de Usuarios</a></li>
+                {% elif user.role == 'Empleado' %}
+                    <li><a href="{% url 'inventario' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-box-seam-fill me-2"></i> Inventario</a></li>
+                    <li><a href="{% url 'clientes' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-people-fill me-2"></i> Clientes</a></li>
+                    <li><a href="{% url 'facturacion:listar_facturas' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-receipt-cutoff me-2"></i> Facturación</a></li>
+                    <li><a href="{% url 'facturacion:listar_notas_credito' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-arrow-left-right me-2"></i> Notas de Crédito</a></li>
+                {% elif user.role|lower == 'vendedor' %}
+                    <li><a href="{% url 'dashboard_vendedor' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-bar-chart-fill me-2"></i> Dashboard</a></li>
+                    <li><a href="{% url 'inventario' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-box-seam-fill me-2"></i> Inventario</a></li>
+                    <li><a href="{% url 'editar_perfil' %}" class="nav-link text-white hover-style d-flex align-items-center"><i class="bi bi-pencil-square me-2"></i> Editar Perfil</a></li>
+                {% endif %}
+            </ul>
+        </div>
 
-        <hr class="border-light">
-
-        <!-- 🔹 Cerrar Sesión -->
-        <div class="text-center">
+        <!-- 🔹 Cerrar sesión fijo abajo -->
+        <div class="p-3 border-top border-secondary">
             <a href="{% url 'logout' %}" class="btn btn-danger w-100 d-flex align-items-center justify-content-center">
                 <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
             </a>
         </div>
     </div>
-    
-    <!-- Contenido Principal -->
-    <div class="flex-grow-1 p-4">
-        {% block content %}{% endblock %}
-    </div>
 </div>
 
+<!-- 🔧 Estilos -->
 <style>
-    .d-flex {
-        align-items: stretch;
-    }
-    .sidebar {
-        min-height: 100%;
+    .sidebar-wrapper {
+        width: 250px;
+        height: calc(100vh - 56px);
+        position: fixed;
+        top: 56px;
+        left: 0;
+        z-index: 1000;
         display: flex;
         flex-direction: column;
+    }
+
+    @media (max-width: 768px) {
+        .sidebar-wrapper {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar-wrapper.show {
+            transform: translateX(0);
+        }
+
+        .content {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        body.sidebar-open::before {
+            content: "";
+            position: fixed;
+            top: 56px;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 56px);
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+        }
     }
 </style>
 

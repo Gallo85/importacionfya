@@ -20,27 +20,23 @@
                         </div>
                         <div class="card-body">
                             <ul class="list-group list-group-flush">
+                                <li class="list-group-item"><strong>📌 Modelo:</strong> {{ producto.modelo }}</li>
+                                <li class="list-group-item"><strong>🎨 Color:</strong> {{ producto.color }}</li>
+                                <li class="list-group-item"><strong>⚡ Estado:</strong> {{ producto.estado }}</li>
+
                                 {% if tipo == "iphone" %}
                                     <li class="list-group-item"><strong>📱 IMEI:</strong> {{ producto.imei }}</li>
-                                    <li class="list-group-item"><strong>📌 Modelo:</strong> {{ producto.modelo }}</li>
-                                    <li class="list-group-item"><strong>🎨 Color:</strong> {{ producto.color }}</li>
                                     <li class="list-group-item"><strong>🔋 Batería:</strong> {{ producto.porcentaje_bateria }}%</li>
                                     <li class="list-group-item"><strong>💾 Capacidad:</strong> {{ producto.capacidad }}</li>
                                     <li class="list-group-item"><strong>📲 iOS:</strong> {{ producto.version_ios }}</li>
-                                    <li class="list-group-item"><strong>⚡ Estado:</strong> {{ producto.estado }}</li>
                                 {% elif tipo == "mac" %}
                                     <li class="list-group-item"><strong>💻 IMEI:</strong> {{ producto.imei }}</li>
-                                    <li class="list-group-item"><strong>📌 Modelo:</strong> {{ producto.modelo }}</li>
-                                    <li class="list-group-item"><strong>🎨 Color:</strong> {{ producto.color }}</li>
                                     <li class="list-group-item"><strong>📺 Pantalla:</strong> {{ producto.pantalla }}</li>
                                     <li class="list-group-item"><strong>💾 Capacidad:</strong> {{ producto.capacidad }}</li>
                                     <li class="list-group-item"><strong>⚡ RAM:</strong> {{ producto.ram }}</li>
-                                    <li class="list-group-item"><strong>⚡ Estado:</strong> {{ producto.estado }}</li>
                                 {% elif tipo == "accesorio" %}
                                     <li class="list-group-item"><strong>🔌 Tipo:</strong> {{ producto.tipo }}</li>
-                                    <li class="list-group-item"><strong>📌 Modelo:</strong> {{ producto.modelo }}</li>
-                                    <li class="list-group-item"><strong>🎨 Color:</strong> {{ producto.color }}</li>
-                                    <li class="list-group-item"><strong>⚡ Estado:</strong> {{ producto.estado }}</li>
+                                    <li class="list-group-item"><strong>📦 Cantidad en stock:</strong> {{ producto.cantidad }}</li>
                                 {% endif %}
                                 <li class="list-group-item"><strong>📍 Ubicación:</strong> {{ producto.ubicacion|default:"No especificada" }}</li>
                             </ul>
@@ -55,7 +51,8 @@
                             <i class="bi bi-cash"></i> Precio y Notas
                         </div>
                         <div class="card-body">
-                            <h4 class="fw-bold text-success">💰 ${{ producto.precio_pesos|default:"0"|intcomma }} ARS</h4>
+                            <h4 class="fw-bold text-success">💰 ${{ producto.precio_pesos|floatformat:2|intcomma }} ARS</h4>
+                            <h5 class="fw-bold text-primary">💵 USD {{ producto.precio|floatformat:2|intcomma }}</h5>
                             <hr>
                             <p class="text-muted"><i class="bi bi-pencil"></i> <strong>Observaciones:</strong></p>
                             <p class="text-secondary">{{ producto.observaciones|default:"No hay observaciones." }}</p>
@@ -63,6 +60,26 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 🔹 Información Confidencial (Solo para Gerentes) -->
+            {% if es_gerente %}
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-danger text-white fw-bold">
+                            <i class="bi bi-lock"></i> Privado
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item"><strong>📅 N° de Orden:</strong> {{ producto.numero_orden|default:"No asignado" }}</li>
+                                <li class="list-group-item"><strong>🏭 Proveedor:</strong> {{ producto.proveedor|default:"No especificado" }}</li>
+                                <li class="list-group-item"><strong>💲 Costo (USD):</strong> ${{ producto.costo|default:"0"|floatformat:2|intcomma }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- 📷 Sección de Fotos -->
             <h5 class="mt-5 fw-bold"><i class="bi bi-camera"></i> Fotos del Producto</h5>
@@ -99,25 +116,4 @@
         </div>
     </div>
 </div>
-
-<!-- 🔹 CSS para que las imágenes queden en un tamaño uniforme sin distorsión -->
-<style>
-    .image-container {
-        width: 100%;
-        height: 120px;  /* Tamaño fijo */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-        border-radius: 5px;
-        overflow: hidden;
-    }
-
-    .image-container img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;  /* 🔹 Evita cortes y mantiene la proporción */
-    }
-</style>
 {% endblock %}
-

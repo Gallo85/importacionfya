@@ -31,84 +31,92 @@
                         <!-- 🔹 Campos dinámicos con Form Floating -->
                         <div class="row g-3">
                             {% for field in form %}
-                                {% if field.name == "estado" %}
-                                    <!-- 🔹 Estado con Select -->
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <select name="estado" id="id_estado" class="form-select" required>
-                                                <option value="Nuevo" {% if form.estado.value == "Nuevo" %}selected{% endif %}>Nuevo</option>
-                                                <option value="Usado" {% if form.estado.value == "Usado" %}selected{% endif %}>Usado</option>
-                                            </select>
-                                            <label for="id_estado">⚡ Estado</label>
+                                {% if field.name not in "numero_orden proveedor costo" %}
+                                    {% if field.name == "estado" %}
+                                        <!-- 🔹 Estado con Select -->
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <select name="estado" id="id_estado" class="form-select" required>
+                                                    <option value="Nuevo" {% if form.estado.value == "Nuevo" %}selected{% endif %}>Nuevo</option>
+                                                    <option value="Usado" {% if form.estado.value == "Usado" %}selected{% endif %}>Usado</option>
+                                                </select>
+                                                <label for="id_estado">⚡ Estado</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                {% elif field.name == "ubicacion" %}
-                                    <!-- 🔹 Ubicación -->
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            {{ field }}
-                                            <label for="{{ field.id_for_label }}">📍 Ubicación</label>
+                                    {% elif field.name == "ubicacion" %}
+                                        <!-- 🔹 Ubicación -->
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ field }}
+                                                <label for="{{ field.id_for_label }}">📍 Ubicación</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                {% else %}
-                                    <!-- 🔹 Campos normales -->
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            {{ field }}
-                                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {% else %}
+                                        <!-- 🔹 Campos normales -->
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ field }}
+                                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                            </div>
                                         </div>
-                                    </div>
+                                    {% endif %}
                                 {% endif %}
                             {% endfor %}
                         </div>
 
-                        <!-- 📸 Sección de Fotos -->
-                        <div class="mt-4">
-                            <h5 class="text-secondary"><i class="bi bi-images"></i> 📸 Gestión de Fotos</h5>
-                            <hr>
-                            <div class="row g-3">
-                                {% for foto in fotos_extra %}
-                                    <div class="col-md-3">
-                                        <div class="card shadow-sm border-0 text-center p-2">
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#modalFoto{{ foto.id }}">
-                                                <div class="image-container">
-                                                    <img src="{{ foto.foto.url }}" alt="Foto adicional" class="img-thumbnail">
-                                                </div>
-                                            </a>
-                                            <div class="mt-2">
-                                                {% if foto.es_principal %}
-                                                    <span class="badge bg-primary"> Foto Principal</span>
-                                                {% else %}
-                                                    <button type="submit" name="set_primary" value="{{ foto.id }}" class="btn btn-info btn-sm">Cambiar a Principal</button>
-                                                {% endif %}
-                                                <button type="submit" name="delete_photo" value="{{ foto.id }}" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+                        <!-- 🔹 Información Confidencial -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card shadow-sm border-0">
+                                    <div class="card-header bg-danger text-white fw-bold">
+                                        <i class="bi bi-lock"></i> Información Confidencial
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <label for="id_numero_orden" class="fw-bold">📅 N° de Orden:</label>
+                                                <input type="text" name="numero_orden" id="id_numero_orden"
+                                                       class="form-control" placeholder="DD/MM/AAAA"
+                                                       value="{{ form.numero_orden.value|date:'d/m/Y'|default:'' }}">
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label for="{{ form.proveedor.id_for_label }}" class="fw-bold">🏭 Proveedor:</label>
+                                                {{ form.proveedor }}
+                                            </div>
+                                            <div class="col-md-12">
+                                                <label for="{{ form.costo.id_for_label }}" class="fw-bold">💲 Costo (USD):</label>
+                                                {{ form.costo }}
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <!-- Modal para ampliar imagen -->
-                                    <div class="modal fade" id="modalFoto{{ foto.id }}" tabindex="-1" aria-labelledby="modalLabel{{ foto.id }}" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="modalLabel{{ foto.id }}">Vista Previa</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                                                </div>
-                                                <div class="modal-body text-center">
-                                                    <img src="{{ foto.foto.url }}" alt="Foto adicional" class="img-fluid rounded">
-                                                </div>
+                        <!-- 📸 Sección de Fotos -->
+                        <h5 class="mt-4 text-secondary"><i class="bi bi-images"></i> 📸 Gestión de Fotos</h5>
+                        <div class="row g-3">
+                            {% for foto in fotos_extra %}
+                                <div class="col-md-3">
+                                    <div class="card shadow-sm border-0 text-center p-2">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#modalFoto{{ foto.id }}">
+                                            <div class="image-container">
+                                                <img src="{{ foto.foto.url }}" alt="Foto adicional" class="img-thumbnail">
                                             </div>
+                                        </a>
+                                        <div class="mt-2">
+                                            {% if foto.es_principal %}
+                                                <span class="badge bg-primary"> Foto Principal</span>
+                                            {% else %}
+                                                <button type="submit" name="set_primary" value="{{ foto.id }}" class="btn btn-info btn-sm">Cambiar a Principal</button>
+                                            {% endif %}
+                                            <button type="submit" name="delete_photo" value="{{ foto.id }}" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
                                         </div>
                                     </div>
-                                {% empty %}
-                                    <p class="text-muted text-center">⚠️ No hay fotos adicionales.</p>
-                                {% endfor %}
-                            </div>
-                            <div class="mt-4">
-                                <label for="foto" class="form-label fs-5 fw-bold">📤 Agregar nueva foto:</label>
-                                <input type="file" name="foto" id="foto" class="form-control">
-                                <button type="submit" name="add_photo" class="btn btn-success mt-2 btn-lg"><i class="bi bi-upload"></i> Subir Foto</button>
-                            </div>
+                                </div>
+                            {% empty %}
+                                <p class="text-muted text-center">⚠️ No hay fotos adicionales.</p>
+                            {% endfor %}
                         </div>
 
                         <!-- 🔘 Botones de Acción -->
@@ -123,11 +131,33 @@
     </div>
 </div>
 
-<!-- 🔹 CSS para que las imágenes queden en un tamaño uniforme sin distorsión -->
+<!-- 🔹 JavaScript para Formato de Fecha -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let fechaInput = document.getElementById("id_numero_orden");
+
+        // Convierte "YYYY-MM-DD" a "DD/MM/AAAA" al cargar la página
+        if (fechaInput.value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            let partes = fechaInput.value.split("-");
+            fechaInput.value = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        // Convierte "YYYY-MM-DD" a "DD/MM/AAAA" si el usuario edita el campo
+        fechaInput.addEventListener("blur", function() {
+            let valor = fechaInput.value.trim();
+            if (valor.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                let partes = valor.split("-");
+                fechaInput.value = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+        });
+    });
+</script>
+
+<!-- 🔹 CSS para Ajustar el Diseño -->
 <style>
     .image-container {
         width: 100%;
-        height: 120px;  /* Tamaño fijo */
+        height: 120px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -139,7 +169,19 @@
     .image-container img {
         max-width: 100%;
         max-height: 100%;
-        object-fit: contain;  /* 🔹 Evita cortes y mantiene la proporción */
+        object-fit: contain;
+    }
+
+    .card-body label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 1rem;
+    }
+
+    .card-body input {
+        width: 100%;
+        padding: 8px;
+        font-size: 1rem;
     }
 </style>
 {% endblock %}

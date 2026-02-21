@@ -63,7 +63,12 @@
                     <td>{{ cliente.nombre }}</td>
                     <td>{{ cliente.apellido }}</td>
                     <td>{{ cliente.email }}</td>
-                    <td>{{ cliente.telefono }}</td>
+                    <td>
+                        <span class="phone-container">
+                            <span class="hidden-phone">******</span>
+                            <span class="phone-number">{{ cliente.telefono }}</span>
+                        </span>
+                    </td>
                     <td>{{ cliente.direccion }}</td>
                     <td>{{ cliente.notas }}</td>
                     <td>{{ cliente.fecha_registro|date:"d/m/Y H:i" }}</td>
@@ -96,6 +101,37 @@
     </div>
 </div>
 
+<!-- 🔹 Estilos CSS para ocultar y mostrar los números -->
+<style>
+    .phone-container {
+        position: relative;
+        display: inline-block;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .hidden-phone {
+        color: #999;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .phone-number {
+        display: none;
+        color: #000;
+        font-weight: normal;
+    }
+
+    /* 🔥 Al pasar el mouse, ocultamos las ****** y mostramos el número real */
+    .phone-container:hover .hidden-phone {
+        display: none;
+    }
+
+    .phone-container:hover .phone-number {
+        display: inline;
+    }
+</style>
+
 <!-- 🔹 Activa los tooltips de Bootstrap -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -112,10 +148,10 @@
         <ul class="pagination justify-content-center">
             {% if clientes.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page=1{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.apellido %}&apellido={{ request.GET.apellido }}{% endif %}{% if request.GET.email %}&email={{ request.GET.email }}{% endif %}">« Primera</a>
+                    <a class="page-link" href="?page=1">« Primera</a>
                 </li>
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ clientes.previous_page_number }}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.apellido %}&apellido={{ request.GET.apellido }}{% endif %}{% if request.GET.email %}&email={{ request.GET.email }}{% endif %}">‹ Anterior</a>
+                    <a class="page-link" href="?page={{ clientes.previous_page_number }}">‹ Anterior</a>
                 </li>
             {% endif %}
 
@@ -125,10 +161,10 @@
 
             {% if clientes.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ clientes.next_page_number }}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.apellido %}&apellido={{ request.GET.apellido }}{% endif %}{% if request.GET.email %}&email={{ request.GET.email }}{% endif %}">Siguiente ›</a>
+                    <a class="page-link" href="?page={{ clientes.next_page_number }}">Siguiente ›</a>
                 </li>
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ clientes.paginator.num_pages }}{% if request.GET.nombre %}&nombre={{ request.GET.nombre }}{% endif %}{% if request.GET.apellido %}&apellido={{ request.GET.apellido }}{% endif %}{% if request.GET.email %}&email={{ request.GET.email }}{% endif %}">Última »</a>
+                    <a class="page-link" href="?page={{ clientes.paginator.num_pages }}">Última »</a>
                 </li>
             {% endif %}
         </ul>
@@ -136,7 +172,6 @@
 {% endif %}
 
 {% endblock %}
-
 
 
 

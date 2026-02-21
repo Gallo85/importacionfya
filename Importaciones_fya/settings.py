@@ -4,114 +4,181 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-a!j(yus_j5!r9i!(pt0k)a0e&(b_p-b)$ig(b^uq-hq_mc)5h@'
-DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+# ==================== Core ====================
+SECRET_KEY = config("SECRET_KEY", default="changeme-para-dev")
+DEBUG = config("DEBUG", cast=bool, default=False)
 
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'core',
-    'productos',
-    'accounts',
-    'facturacion',
-    'divisas',
-    'django.contrib.humanize',
-    'axes',  # 🔒 Protección contra fuerza bruta
+ALLOWED_HOSTS = [
+    "tecnologiafya.site",
+    "www.tecnologiafya.site",
+    # agrega tu subdominio de PythonAnywhere si lo usas directamente:
+    # "tuusuario.pythonanywhere.com",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://tecnologiafya.site",
+    "https://www.tecnologiafya.site",
+    # si accedés por el dominio de PA con HTTPS:
+    # "https://tuusuario.pythonanywhere.com",
+]
+
+# ==================== Apps ====================
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
+    "core",
+    "productos",
+    "accounts",
+    "facturacion",
+    "divisas",
+    "axes",  # 🔒 Protección fuerza bruta
+]
+
+# ==================== Middleware ====================
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'axes.middleware.AxesMiddleware',  # 🔒 Middleware para bloquear intentos de login fallidos
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
+    "accounts.middleware.AutoLogoutMiddleware",
+    "accounts.middleware.RestrictIPMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Primero, la autenticación normal de Django
-    'axes.backends.AxesBackend',  # Luego, la seguridad de Axes
+    "django.contrib.auth.backends.ModelBackend",
+    "axes.backends.AxesBackend",
 ]
 
-
-ROOT_URLCONF = 'Importaciones_fya.urls'
+ROOT_URLCONF = "Importaciones_fya.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'Importaciones_fya.wsgi.application'
+WSGI_APPLICATION = "Importaciones_fya.wsgi.application"
 
+# ==================== DB (PythonAnywhere MySQL) ====================
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Claudio10$importacionfya',  # Nombre de la base de datos en MySQL
-        'USER': 'Claudio10',  # Usuario de MySQL
-        'PASSWORD': 'Brunito_2020',  # Contraseña de MySQL
-        'HOST': 'Claudio10.mysql.pythonanywhere-services.com',  # Para MySQL local, en PythonAnywhere será diferente
-        'PORT': '3306',  # Puerto de MySQL (por defecto)
+    "default": {
+        "ENGINE": config("DB_ENGINE", default="django.db.backends.mysql"),
+        "NAME": config("DB_NAME", default="importacionfya1$default"),
+        "USER": config("DB_USER", default="importacionfya1"),
+        "PASSWORD": config("DB_PASSWORD", default=""),
+        "HOST": config(
+            "DB_HOST",
+            default="importacionfya1.mysql.pythonanywhere-services.com",
+        ),
+        "PORT": config("DB_PORT", default="3306"),
+        "OPTIONS": {
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
+# ==================== Auth ====================
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = 'es'
-TIME_ZONE = 'America/Argentina/Buenos_Aires'
+AUTH_USER_MODEL = "accounts.Usuario"
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+# ==================== I18N ====================
+LANGUAGE_CODE = "es"
+TIME_ZONE = "America/Argentina/Buenos_Aires"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# ==================== Static & Media ====================
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"  # <- necesario en producción (collectstatic)
+# Si además tenés assets de desarrollo:
+# STATICFILES_DIRS = [BASE_DIR / "static"]
 
-AUTH_USER_MODEL = 'accounts.Usuario'
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
-# Configuración del Email
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+# ==================== Email ====================
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Debe estar en el .env
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # Debe estar en el .env
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# API para conversión de divisas
-DOLAR_API_ENDPOINT = config('DOLAR_API_ENDPOINT', default='https://api.exchangeratesapi.io/latest')
+# ==================== Seguridad (producción) ====================
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 0  # en PA podés forzar HTTPS desde el panel; dejalo en 0 si no configuraste HSTS
+SECURE_SSL_REDIRECT = False  # en PA normalmente se fuerza HTTPS desde el panel
 
-# 🔒 Configuración de Django Axes para bloquear intentos de login fallidos
-AXES_FAILURE_LIMIT = 5  # Número de intentos antes de bloquear
-AXES_COOLOFF_TIME = 5  # Tiempo de espera en horas antes de permitir un nuevo intento
-AXES_LOCKOUT_TEMPLATE = 'accounts/lockout.html'  # Página personalizada cuando un usuario es bloqueado
-AXES_RESET_ON_SUCCESS = True  # 🔒 Reinicia los intentos fallidos si el usuario ingresa correctamente
+# ==================== Axes (detrás de proxy) ====================
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 5  # horas
+AXES_LOCKOUT_TEMPLATE = "accounts/lockout.html"
+AXES_RESET_ON_SUCCESS = True
+AXES_BEHIND_REVERSE_PROXY = True
+AXES_META_PRECEDENCE_ORDER = (
+    "HTTP_X_FORWARDED_FOR",
+    "REMOTE_ADDR",
+)
 
+# ==================== Mensajes ====================
+from django.contrib.messages import constants as messages
+MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
+MESSAGE_TAGS = {
+    messages.ERROR: "danger",
+    messages.SUCCESS: "success",
+    messages.INFO: "info",
+}
 
+# ==================== Cache ====================
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "tecnologiafya-cache",
+    }
+}
 
+# ==================== Divisas (si quisieras exponer algún endpoint legacy) ====================
+DOLAR_API_ENDPOINT = config("DOLAR_API_ENDPOINT", default="https://www.dolarapi.com/v1/dolares")
 
+# ==================== Logging (útil p/ ver el scraper en PA) ====================
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO"},
+        "divisas": {"handlers": ["console"], "level": "INFO"},
+    },
+}

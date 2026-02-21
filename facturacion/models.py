@@ -4,7 +4,7 @@ from django.utils import timezone
 from accounts.models import Cliente
 from productos.models import Iphone, Mac, Accesorio
 from django.db.models import Sum
-
+from django.core.exceptions import ValidationError
 
 class Factura(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='facturas')
@@ -32,8 +32,6 @@ class Factura(models.Model):
 
 class DetalleFactura(models.Model):
     factura = models.ForeignKey(Factura, on_delete=models.CASCADE, related_name='detalles')
-
-    # Relación con los productos
     producto_iphone = models.ForeignKey(Iphone, on_delete=models.SET_NULL, null=True, blank=True)
     producto_mac = models.ForeignKey(Mac, on_delete=models.SET_NULL, null=True, blank=True)
     producto_accesorio = models.ForeignKey(Accesorio, on_delete=models.SET_NULL, null=True, blank=True)
@@ -42,20 +40,41 @@ class DetalleFactura(models.Model):
     cantidad = models.PositiveIntegerField()
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
-    def obtener_nombre_producto(self):
-        """
-        Devuelve el nombre del producto real basado en su relación.
-        """
-        if self.producto_iphone:
-            return f"{self.producto_iphone.modelo} - IMEI: {self.producto_iphone.imei}"
-        elif self.producto_mac:
-            return f"{self.producto_mac.modelo} - IMEI: {self.producto_mac.imei}"
-        elif self.producto_accesorio:
-            return f"{self.producto_accesorio.modelo}"
-        return "Producto Desconocido"
+    def clean(self):
+        productos = [self.producto_iphone, self.producto_mac, self.producto_accesorio]
+        productos_seleccionados = sum(1 for p in productos if p is not None)
+        if productos_seleccionados != 1:
+            raise ValidationError("Debes seleccionar exactamente un producto para el detalle de la factura.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        if self.factura.id:
+            if self.producto_accesorio:
+                if self.cantidad > self.producto_accesorio.cantidad:
+                    raise ValidationError(f"No hay suficiente stock de {self.producto_accesorio.modelo}. Disponible: {self.producto_accesorio.cantidad}")
+                self.producto_accesorio.cantidad -= self.cantidad
+                self.producto_accesorio.save()
+        self.subtotal = self.cantidad * self.precio_unitario
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.producto_accesorio:
+            self.producto_accesorio.cantidad += self.cantidad
+            self.producto_accesorio.save()
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"{self.obtener_nombre_producto()} - Cantidad: {self.cantidad} - Subtotal: {self.subtotal}"
+
+    # ✅ MÉTODO NUEVO
+    def nombre_con_imei(self):
+        if self.producto_iphone:
+            return f"iPhone – {self.producto_iphone.modelo} – IMEI: {self.producto_iphone.imei}"
+        if self.producto_mac:
+            return f"Mac – {self.producto_mac.modelo} – IMEI: {self.producto_mac.imei}"
+        if self.producto_accesorio:
+            return f"Accesorio – {self.producto_accesorio.modelo}"
+        return "Producto sin especificar"
 
 
 
@@ -147,4 +166,3 @@ class NotaCredito(models.Model):
 
 
 
-    

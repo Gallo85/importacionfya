@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from accounts.utils import role_required
 from .models import Cliente, Usuario
 from .forms import ClienteForm, UsuarioForm
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User, Group
 from django.core.paginator import Paginator
 from .forms import RegistroUsuarioForm, EditarUsuarioForm
 
@@ -15,25 +15,35 @@ def user_login(request):
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
+
         if user is not None:
             login(request, user)
-            # Redirigir según el campo `role`
-            if user.role == 'Gerente':
-                return redirect('dashboard_gerente')  # Define esta URL
-            elif user.role == 'Empleado':
-                return redirect('dashboard_empleado')  # Define esta URL
-            elif user.role == 'Vendedor':
-                return redirect('dashboard_vendedor')  # Define esta URL
+            if hasattr(user, 'role'):
+                if user.role == 'Gerente':
+                    return redirect('dashboard_gerente')
+                elif user.role == 'Empleado':
+                    return redirect('dashboard_empleado')
+                elif user.role == 'Vendedor':
+                    return redirect('dashboard_vendedor')
+                else:
+                    messages.error(request, 'Rol desconocido, contacta al administrador.')
+                    print("MENSAJE ERROR: Rol desconocido")  # Debug
+                    return redirect('login')
             else:
-                messages.error(request, 'Rol desconocido, contacta al administrador.')
+                messages.error(request, 'El usuario no tiene un rol asignado.')
+                print("MENSAJE ERROR: Usuario sin rol")  # Debug
+                return redirect('login')
         else:
             messages.error(request, 'Credenciales incorrectas.')
+            print("MENSAJE ERROR: Credenciales incorrectas")  # Debug
+            return redirect('login')
+
     return render(request, 'login.html')
 
-
 def user_logout(request):
+    messages.get_messages(request).used = True  # Elimina mensajes antes de cerrar sesión
     logout(request)
-    return redirect('login')  # Redirige al login después del logout
+    return redirect('login')  # Redirige sin mensajes antiguos
 
 
 @login_required
@@ -54,7 +64,7 @@ def gestion_clientes(request):
         clientes_query = clientes_query.filter(email__icontains=email)
 
     # Paginación: 10 clientes por página
-    paginator = Paginator(clientes_query, 10)  
+    paginator = Paginator(clientes_query, 10)
     clientes_paginados = paginator.get_page(page_number)
 
     return render(request, 'accounts/clientes.html', {
@@ -67,7 +77,7 @@ def gestion_clientes(request):
 
 def listar_clientes(request):
     clientes_list = Cliente.objects.all()
-    
+
     paginator = Paginator(clientes_list, 15)  # Mostrar 10 clientes por página
     page_number = request.GET.get('page')
     clientes = paginator.get_page(page_number)
@@ -86,18 +96,15 @@ def listar_clientes(request):
 @login_required
 @role_required(['Gerente', 'Empleado'])
 def crear_cliente(request):
-    if request.method == 'POST':  # Cuando se envía el formulario
-        form = ClienteForm(request.POST)
-        if form.is_valid():  # Verificar si el formulario es válido
-            print("Formulario válido")  # Depuración
-            form.save()  # Guardar el cliente
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, user=request.user)  # Pasar usuario
+        if form.is_valid():
+            form.save()
             messages.success(request, 'Cliente creado exitosamente.')
-            return redirect('clientes')  # Redirigir a la lista de clientes
-        else:
-            print("Errores en el formulario:", form.errors)  # Depuración
-    else:  # Cuando se carga por primera vez
-        form = ClienteForm()
-    
+            return redirect('clientes')
+    else:
+        form = ClienteForm(user=request.user)  # Pasar usuario
+
     return render(request, 'clientes/crear_cliente.html', {'form': form})
 
 
@@ -105,13 +112,15 @@ def crear_cliente(request):
 @role_required(['Gerente', 'Empleado'])
 def editar_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
+
     if request.method == 'POST':
-        form = ClienteForm(request.POST, instance=cliente)
+        form = ClienteForm(request.POST, instance=cliente, user=request.user)  # Pasar usuario
         if form.is_valid():
             form.save()
-            return redirect('clientes')  # Redirige a la lista de clientes (asegúrate de que esta URL exista)
+            return redirect('clientes')
     else:
-        form = ClienteForm(instance=cliente)
+        form = ClienteForm(instance=cliente, user=request.user)  # Pasar usuario
+
     return render(request, 'clientes/editar_cliente.html', {'form': form, 'cliente': cliente})
 
 @login_required

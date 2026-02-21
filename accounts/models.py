@@ -77,6 +77,7 @@ class Cliente(models.Model):
     direccion = models.TextField(blank=True, null=True)
     notas = models.TextField(blank=True, null=True)
     fecha_registro = models.DateTimeField(default=now)
+    vendedor = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'Vendedor'})
 
     def __str__(self):
         return f"{self.nombre} {self.apellido}"

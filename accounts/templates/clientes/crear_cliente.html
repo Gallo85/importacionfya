@@ -13,9 +13,9 @@
                 <div class="card-body">
                     <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
-                        
-                        <!-- Nombre y Apellido -->
-                        <div class="row mb-3">
+
+                        <div class="row g-3">
+                            <!-- Nombre y Apellido -->
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" name="nombre" id="id_nombre" class="form-control" placeholder="Nombre" value="{{ form.nombre.value }}" required>
@@ -25,6 +25,7 @@
                                     <div class="text-danger">{{ form.nombre.errors|join:" " }}</div>
                                 {% endif %}
                             </div>
+
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" name="apellido" id="id_apellido" class="form-control" placeholder="Apellido" value="{{ form.apellido.value }}" required>
@@ -34,10 +35,8 @@
                                     <div class="text-danger">{{ form.apellido.errors|join:" " }}</div>
                                 {% endif %}
                             </div>
-                        </div>
 
-                        <!-- Email y Teléfono -->
-                        <div class="row mb-3">
+                            <!-- Email y Teléfono -->
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="email" name="email" id="id_email" class="form-control" placeholder="Correo Electrónico" value="{{ form.email.value }}" required>
@@ -47,6 +46,7 @@
                                     <div class="text-danger">{{ form.email.errors|join:" " }}</div>
                                 {% endif %}
                             </div>
+
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" name="telefono" id="id_telefono" class="form-control" placeholder="Teléfono" value="{{ form.telefono.value }}" required>
@@ -56,35 +56,54 @@
                                     <div class="text-danger">{{ form.telefono.errors|join:" " }}</div>
                                 {% endif %}
                             </div>
-                        </div>
 
-                        <!-- Dirección -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input type="text" name="direccion" id="id_direccion" class="form-control" placeholder="Dirección" value="{{ form.direccion.value }}" required>
-                                <label for="id_direccion">🏠 Dirección</label>
+                            <!-- Dirección -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="text" name="direccion" id="id_direccion" class="form-control" placeholder="Dirección" value="{{ form.direccion.value }}" required>
+                                    <label for="id_direccion">🏠 Dirección</label>
+                                </div>
+                                {% if form.direccion.errors %}
+                                    <div class="text-danger">{{ form.direccion.errors|join:" " }}</div>
+                                {% endif %}
                             </div>
-                            {% if form.direccion.errors %}
-                                <div class="text-danger">{{ form.direccion.errors|join:" " }}</div>
-                            {% endif %}
-                        </div>
 
-                        <!-- Notas -->
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <textarea name="notas" id="id_notas" class="form-control" placeholder="Notas">{{ form.notas.value }}</textarea>
-                                <label for="id_notas">📝 Notas</label>
+                            <!-- Notas -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <textarea name="notas" id="id_notas" class="form-control" placeholder="Notas" style="height: 100px;">{{ form.notas.value }}</textarea>
+                                    <label for="id_notas">📝 Notas</label>
+                                </div>
+                                {% if form.notas.errors %}
+                                    <div class="text-danger">{{ form.notas.errors|join:" " }}</div>
+                                {% endif %}
                             </div>
-                            {% if form.notas.errors %}
-                                <div class="text-danger">{{ form.notas.errors|join:" " }}</div>
-                            {% endif %}
+
+                            <!-- Vendedor (Solo muestra usuarios con rol "Vendedor") -->
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <select name="vendedor" id="id_vendedor" class="form-select">
+                                        <option value="" selected>Seleccione un vendedor</option>
+                                        {% for vendedor in form.fields.vendedor.queryset %}
+                                            <option value="{{ vendedor.id }}" {% if vendedor.id == form.vendedor.value %}selected{% endif %}>
+                                                {{ vendedor.username }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="id_vendedor">🛒 Vendedor Asignado</label>
+                                </div>
+                                {% if form.vendedor.errors %}
+                                    <div class="text-danger">{{ form.vendedor.errors|join:" " }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="col-12 d-flex justify-content-between mt-4">
+                                <button type="submit" class="btn btn-success px-4">💾 Guardar Cliente</button>
+                                <a href="{% url 'clientes' %}" class="btn btn-outline-secondary px-4">❌ Cancelar</a>
+                            </div>
                         </div>
 
-                        <!-- Botones -->
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-success px-4">💾 Guardar Cliente</button>
-                            <a href="{% url 'clientes' %}" class="btn btn-outline-secondary px-4">❌ Cancelar</a>
-                        </div>
                     </form>
                 </div>
             </div>

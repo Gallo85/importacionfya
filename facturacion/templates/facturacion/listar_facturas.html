@@ -56,28 +56,22 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
-                                <a href="{% url 'facturacion:detalle_factura' factura.id %}" 
+                                <a href="{% url 'facturacion:detalle_factura' factura.id %}"
                                    class="btn btn-sm btn-outline-info" title="Ver Factura">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if es_gerente %}
-                                    <a href="{% url 'facturacion:eliminar_factura' factura.id %}" 
-                                       class="btn btn-sm btn-outline-danger" 
+                                    <a href="{% url 'facturacion:eliminar_factura' factura.id %}"
+                                       class="btn btn-sm btn-outline-danger"
                                        onclick="return confirm('¿Estás seguro de eliminar esta factura?');"
                                        title="Eliminar Factura">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 {% endif %}
-                                <a href="{% url 'facturacion:imprimir_factura' factura.id %}" 
+                                <a href="{% url 'facturacion:imprimir_factura' factura.id %}"
                                    class="btn btn-sm btn-outline-secondary" title="Imprimir Factura" target="_blank">
                                     <i class="bi bi-printer"></i>
                                 </a>
-                                <form method="post" action="{% url 'facturacion:enviar_factura_email' factura.id %}" style="display:inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Enviar por Email">
-                                        <i class="bi bi-envelope"></i>
-                                    </button>
-                                </form>
                             </div>
                         </td>
                     </tr>

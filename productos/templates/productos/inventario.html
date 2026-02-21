@@ -4,22 +4,39 @@
 {% block title %}📦 Inventario{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4 text-primary"><i class="bi bi-box-seam"></i> Inventario</h1>
+<div class="container-fluid px-4 mt-4">
+    <h1 class="mb-2 text-primary"><i class="bi bi-box-seam"></i> Inventario</h1>
+    <p class="text-muted mb-4">Visualizá y gestioná el stock actual de productos ingresados al sistema.</p>
 
-    <!-- 🔹 Formulario de Filtros -->
+    {% if filtros and filtros.values|length > 0 and filtros.values|join:'' %}
+    <div class="alert alert-info d-flex align-items-center flex-wrap gap-2">
+        <strong>Filtros aplicados:</strong>
+        {% for key, value in filtros.items %}
+            {% if value %}
+                <span class="badge bg-primary py-1 px-2">
+                    {{ key|title }}: {{ value }}
+                    {% with request.GET.urlencode|cut:key|cut:'page=' as filtro_url %}
+                        <a href="?{{ filtro_url }}" class="text-white text-decoration-none">&times;</a>
+                    {% endwith %}
+                </span>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Formulario de filtros -->
     <div class="card shadow-sm border-0 mb-4 bg-light">
         <div class="card-body">
             <h5 class="card-title text-secondary">🔍 Buscar Productos</h5>
             <hr>
-            <form method="get" class="row g-3 align-items-center">
-                <div class="col-md-3">
+            <form method="get" class="row g-2" autocomplete="off">
+                <div class="col-12 col-md-6 col-lg-3">
                     <div class="form-floating">
-                        <input type="text" name="modelo" class="form-control" id="modelo" placeholder="Buscar por modelo" value="{{ filtros.modelo }}">
+                        <input type="text" name="modelo" class="form-control" id="modelo" placeholder="Modelo" value="{{ filtros.modelo }}">
                         <label for="modelo">Modelo</label>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
                     <div class="form-floating">
                         <select name="tipo" class="form-select" id="tipo">
                             <option value="">Todos los tipos</option>
@@ -30,21 +47,49 @@
                         <label for="tipo">Tipo</label>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-6 col-lg-3">
                     <div class="form-floating">
-                        <input type="text" name="imei" class="form-control" id="imei" placeholder="Buscar por IMEI" value="{{ filtros.imei }}">
+                        <input type="text" name="capacidad" class="form-control" id="capacidad" placeholder="Capacidad" value="{{ filtros.capacidad }}">
+                        <label for="capacidad">Capacidad</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="form-floating">
+                        <input type="text" name="color" class="form-control" id="color" placeholder="Color" value="{{ filtros.color }}">
+                        <label for="color">Color</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="form-floating">
+                        <input type="text" name="ubicacion" class="form-control" id="ubicacion" placeholder="Ubicación" value="{{ filtros.ubicacion }}">
+                        <label for="ubicacion">Ubicación</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="form-floating">
+                        <select name="estado" class="form-select" id="estado">
+                            <option value="">Todos los estados</option>
+                            <option value="nuevo" {% if filtros.estado == "nuevo" %}selected{% endif %}>Nuevo</option>
+                            <option value="usado" {% if filtros.estado == "usado" %}selected{% endif %}>Usado</option>
+                        </select>
+                        <label for="estado">Estado</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="form-floating">
+                        <input type="text" name="imei" class="form-control" id="imei" placeholder="IMEI" value="{{ filtros.imei }}">
                         <label for="imei">IMEI</label>
                     </div>
                 </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-outline-primary w-100"> Filtrar</button>
-                    <a href="{% url 'inventario' %}" class="btn btn-outline-success w-100"> Limpiar</a>
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Filtrar</button>
+                    <a href="{% url 'inventario' %}" class="btn btn-outline-success w-100"><i class="bi bi-x-circle"></i> Limpiar</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 🔹 Tabla de Inventario -->
+    <!-- Tabla de Inventario -->
     <div class="table-responsive shadow-sm">
         <table class="table table-hover align-middle text-center">
             <thead class="table-primary">
@@ -52,9 +97,10 @@
                     <th>#</th>
                     <th>Modelo</th>
                     <th>Tipo</th>
+                    <th>Estado</th>
                     <th>IMEI</th>
-                    <th>QR</th>
-                    <th>Precio en Pesos</th>
+                    <th>Precio USD</th>
+                    <th>Precio ARS</th>
                     <th>Descripción</th>
                     <th>Acciones</th>
                 </tr>
@@ -62,113 +108,92 @@
             <tbody>
                 {% for producto in productos %}
                 <tr>
-                    <td>{{ forloop.counter|add:productos.start_index|add:"-1" }}</td>
+                    <td>{{ forloop.counter }}</td>
                     <td class="fw-bold">{{ producto.obj.modelo }}</td>
-                    <td><span class="badge bg-secondary">{{ producto.tipo|title }}</span></td>
+                    <td><span class="badge bg-secondary py-1 px-2">{{ producto.tipo|title }}</span></td>
                     <td>
-                        {% if producto.tipo == "iphone" or producto.tipo == "mac" %}
+                        <span class="badge {% if producto.obj.estado|lower == 'nuevo' %}bg-success{% else %}bg-warning{% endif %} py-1 px-2">
+                            {{ producto.obj.estado|title }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if producto.tipo in "iphone,mac" %}
                             {{ producto.obj.imei }}
                         {% else %}
                             <span class="text-muted">N/A</span>
                         {% endif %}
                     </td>
-                    <td>
-                        {% if producto.obj.qr_code %}
-                            <img src="{{ producto.obj.qr_code.url }}" alt="QR" width="50" class="img-thumbnail">
-                        {% else %}
-                            <span class="text-muted">No disponible</span>
-                        {% endif %}
+                    <td class="fw-bold text-primary">
+                        ${{ producto.obj.precio|default:"0"|intcomma }} USD
                     </td>
                     <td class="fw-bold text-success">
-                        ${{ producto.obj.precio_pesos|default:"0"|intcomma }} ARS
+                        ${{ producto.precio_pesos|default:"0"|intcomma }} ARS
                     </td>
-                    <td>
-                        <span class="text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="
-                            {% if producto.tipo == 'iphone' %}
-                                IMEI: {{ producto.obj.imei }}, Color: {{ producto.obj.color }}, Estado: {{ producto.obj.estado }}, Capacidad: {{ producto.obj.capacidad }}, Batería: {{ producto.obj.porcentaje_bateria }}%
-                            {% elif producto.tipo == 'mac' %}
-                                IMEI: {{ producto.obj.imei }}, Estado: {{ producto.obj.estado }}, Capacidad: {{ producto.obj.capacidad }}, RAM: {{ producto.obj.ram }}, Pantalla: {{ producto.obj.pantalla }}
-                            {% elif producto.tipo == 'accesorio' %}
-                                Tipo: {{ producto.obj.tipo }}, Color: {{ producto.obj.color }}, Estado: {{ producto.obj.estado }}
-                            {% endif %}">
-                            🔍 Ver más
-                        </span>
+                    <td class="text-center" style="max-width: 300px;">
+                        <div class="d-flex flex-wrap justify-content-center gap-1">
+                            <div style="width: 90px;">
+                                {% if producto.obj.color %}
+                                    <span class="badge bg-dark text-white py-1 px-2 w-100 d-block text-center">
+                                        <i class="bi bi-palette"></i> {{ producto.obj.color }}
+                                    </span>
+                                {% else %}
+                                    <span class="invisible d-block w-100">---</span>
+                                {% endif %}
+                            </div>
+                            <div style="width: 90px;">
+                                {% if producto.obj.capacidad %}
+                                    <span class="badge bg-info text-dark py-1 px-2 w-100 d-block text-center">
+                                        <i class="bi bi-hdd"></i> {{ producto.obj.capacidad }}
+                                    </span>
+                                {% else %}
+                                    <span class="invisible d-block w-100">---</span>
+                                {% endif %}
+                            </div>
+                            <div style="width: 90px;">
+                                {% if producto.obj.porcentaje_bateria %}
+                                    <span class="badge bg-warning text-dark py-1 px-2 w-100 d-block text-center">
+                                        <i class="bi bi-battery-half"></i> {{ producto.obj.porcentaje_bateria }}%
+                                    </span>
+                                {% else %}
+                                    <span class="invisible d-block w-100">---</span>
+                                {% endif %}
+                            </div>
+                            <div style="width: 90px;">
+                                <span class="badge bg-secondary text-white py-1 px-2 w-100 d-block text-center">
+                                    <i class="bi bi-geo-alt"></i> {{ producto.obj.ubicacion|default:"No asignada" }}
+                                </span>
+                            </div>
+                        </div>
                     </td>
-                    <td>
-                        <div class="d-flex justify-content-center gap-2">
-                            <a href="{% url 'ver_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-primary btn-sm">
+                    <td class="text-center text-nowrap" style="min-width: 130px;">
+                        <div class="d-flex justify-content-center flex-wrap gap-1">
+                            <a href="{% url 'ver_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-primary btn-sm" title="Ver producto">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="{% url 'editar_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-warning btn-sm">
+                            <a href="{% url 'editar_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-warning btn-sm" title="Editar producto">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <a href="{% url 'eliminar_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-danger btn-sm"
-                               onclick="return confirm('¿Seguro que deseas eliminar este producto?');">
+                            <a href="{% url 'eliminar_producto' producto.tipo|lower producto.obj.pk %}" class="btn btn-outline-danger btn-sm" title="Eliminar producto" onclick="return confirm('¿Seguro que deseas eliminar este producto?');">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </div>
-                    </td>                    
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8" class="text-center text-muted">⚠️ No hay productos registrados.</td>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
 
-<script>
-    // Activar tooltips de Bootstrap
-    document.addEventListener("DOMContentLoaded", function () {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-            new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    });
-</script>
-
-<!-- 🔹 Paginación -->
-{% if productos.has_other_pages %}
+    {% if productos.has_other_pages %}
     <nav>
         <ul class="pagination justify-content-center">
-            {% if productos.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1">« Primera</a>
+            {% for p in productos.paginator.page_range %}
+                <li class="page-item {% if productos.number == p %}active{% endif %}">
+                    <a class="page-link" href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ p }}">{{ p }}</a>
                 </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ productos.previous_page_number }}">‹ Anterior</a>
-                </li>
-            {% endif %}
-
-            <li class="page-item disabled">
-                <span class="page-link">Página {{ productos.number }} de {{ productos.paginator.num_pages }}</span>
-            </li>
-
-            {% if productos.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ productos.next_page_number }}">Siguiente ›</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ productos.paginator.num_pages }}">Última »</a>
-                </li>
-            {% endif %}
+            {% endfor %}
         </ul>
     </nav>
-{% endif %}
+    {% endif %}
+</div>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-

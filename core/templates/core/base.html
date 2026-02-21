@@ -3,100 +3,120 @@
 <head>
     {% load static %}
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Importación FyA{% endblock %}</title>
-    
+
     <!-- Bootstrap y Estilos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+
+    <style>
+        .navbar {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1050;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #212529;
+            color: white;
+            position: fixed;
+            top: 56px;
+            left: 0;
+            box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex-grow: 1;
+            padding: 15px;
+            margin-left: 250px;
+            margin-top: 70px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+            body.sidebar-open::before {
+                content: "";
+                position: fixed;
+                top: 56px;
+                left: 0;
+                width: 100%;
+                height: calc(100% - 56px);
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+        }
+
+        .sidebar .mt-auto {
+            margin-top: auto;
+            padding: 10px;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
-    <!-- Navbar -->
+    <!-- 🔹 Navbar superior -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold text-white" href="{% url 'dashboard_gerente' %}">
                 <i class="bi bi-box-seam"></i> Importación FyA
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+            <button class="navbar-toggler d-lg-none" type="button" id="sidebarToggle">
+                <i class="bi bi-list text-white"></i>
             </button>
         </div>
     </nav>
-    
-    <!-- Layout principal -->
+
+    <!-- 🔹 Layout principal -->
     <div class="d-flex">
-        <!-- Sidebar -->
         {% include 'core/sidebar.html' %}
-
-        <!-- Main Content -->
-        <div class="container mt-4 w-100">
-            <!-- Mensajes flash -->
-            {% if messages %}
-                <div class="mb-3">
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            <!-- Contenido dinámico -->
+        <div class="content">
             {% block content %}{% endblock %}
         </div>
     </div>
 
-    <!-- Estilos Personalizados -->
-    <style>
-        /* Estilo hover para los links */
-        .hover-style:hover {
-            background-color: transparent !important;
-            color: #007bff !important; /* Azul profesional */
-            font-weight: bold;
-        }
-
-        /* Ajuste para el Sidebar */
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            background: #f8f9fa;
-            box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-    </style>
-
     <!-- Bootstrap JS y Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Scripts adicionales -->
+    <!-- Sidebar móvil -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Formateo dinámico de precios
-            document.querySelectorAll('input[name="precio"]').forEach(input => {
-                input.addEventListener("input", function(e) {
-                    let value = e.target.value.replace(/\./g, "").replace(/,/g, ".");
-                    if (!isNaN(value)) {
-                        const parts = value.split(".");
-                        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                        e.target.value = parts.join(",");
-                    }
-                });
+        document.addEventListener("DOMContentLoaded", function () {
+            const sidebar = document.getElementById("sidebar");
+            const sidebarToggle = document.getElementById("sidebarToggle");
 
-                // Limpiar formato al enviar el formulario
-                const form = input.closest("form");
-                if (form) {
-                    form.addEventListener("submit", function() {
-                        input.value = input.value.replace(/\./g, "").replace(/,/g, ".");
-                    });
+            sidebarToggle.addEventListener("click", function (e) {
+                e.stopPropagation();
+                sidebar.classList.toggle("show");
+                document.body.classList.toggle("sidebar-open");
+            });
+
+            document.addEventListener("click", function (event) {
+                const isClickInside = sidebar.contains(event.target) || sidebarToggle.contains(event.target);
+                if (!isClickInside) {
+                    sidebar.classList.remove("show");
+                    document.body.classList.remove("sidebar-open");
                 }
             });
         });
     </script>
-
-    <!-- Bloque para scripts adicionales -->
-    {% block extra_scripts %}{% endblock %}
 
 </body>
 </html>

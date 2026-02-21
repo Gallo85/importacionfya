@@ -6,12 +6,18 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
-        fields = ['nombre', 'apellido', 'email', 'telefono', 'direccion', 'notas']
+        fields = ["nombre", "apellido", "email", "telefono", "direccion", "notas", "vendedor"]
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.initial = ''  # Inicializar los campos como vacíos
+        user = kwargs.pop("user", None)  # Obtener usuario autenticado
+        super(ClienteForm, self).__init__(*args, **kwargs)
+
+        # 🔹 Filtrar solo vendedores en la lista desplegable
+        self.fields["vendedor"].queryset = Usuario.objects.filter(role="Vendedor")
+
+        # 🔹 Si el cliente YA EXISTE y el usuario NO es Gerente, deshabilitar el campo vendedor
+        if self.instance.pk and user and user.role != "Gerente":
+            self.fields["vendedor"].disabled = True  # Bloquear edición en la vista de edición
 
 
 class RegistroUsuarioForm(UserCreationForm):
@@ -50,7 +56,7 @@ class RegistroUsuarioForm(UserCreationForm):
         if commit:
             user.save()
         return user
-    
+
 
 class UsuarioForm(forms.ModelForm):
     class Meta:

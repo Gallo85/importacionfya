@@ -12,12 +12,17 @@ class ProductoBase(models.Model):
     color = models.CharField(max_length=50)
     estado = models.CharField(max_length=50, choices=[('Nuevo', 'Nuevo'), ('Usado', 'Usado')])
     fotos = models.ImageField(upload_to='productos/', blank=True, null=True)
-    precio = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)  # Precio en dólares
-    precio_pesos = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # ✅ Precio en pesos
+    precio = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    precio_pesos = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
     observaciones = models.TextField(blank=True, null=True)
     stock = models.PositiveIntegerField(default=1)
-    ubicacion = models.CharField(max_length=255, blank=True, null=True)  # ✅ Nuevo campo
+    ubicacion = models.CharField(max_length=255, blank=True, null=True)
+
+    # ✅ Nuevos campos solicitados
+    numero_orden = models.DateField(verbose_name="N° de Orden", null=True, blank=True)
+    proveedor = models.CharField(max_length=255, verbose_name="Proveedor", blank=True, null=True)
+    costo = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Costo (USD)", null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -54,7 +59,7 @@ class ProductoBase(models.Model):
             super().save(*args, **kwargs)
 
 class Iphone(ProductoBase):
-    imei = models.CharField(max_length=15, unique=True)  # IMEI debe ser único
+    imei = models.CharField(max_length=17, unique=True)  # IMEI debe ser único
     capacidad = models.CharField(max_length=50)
     version_ios = models.CharField(max_length=50)
     porcentaje_bateria = models.PositiveIntegerField()
@@ -66,7 +71,7 @@ class Iphone(ProductoBase):
         super().save(*args, **kwargs)
 
 class Mac(ProductoBase):
-    imei = models.CharField(max_length=15, unique=True)  # IMEI debe ser único
+    imei = models.CharField(max_length=17, unique=True)  # IMEI debe ser único
     capacidad = models.CharField(max_length=50)
     ram = models.CharField(max_length=50)
     pantalla = models.CharField(max_length=50)
@@ -85,12 +90,16 @@ class Accesorio(ProductoBase):
         ('Cargador', 'Cargador'),
         ('Protec. Pantalla', 'Protec. Pantalla')
     ])
+    cantidad = models.PositiveIntegerField(default=1)  # ✅ Se agrega cantidad
 
     def save(self, *args, **kwargs):
-        # Verificar si existe un accesorio similar por ID
-        if Accesorio.objects.filter(id=self.id).exists() and not self.pk:
-            raise ValidationError(f"El accesorio con ID {self.id} ya existe.")
+        if self.cantidad < 1:
+            self.cantidad = 1  # ✅ Evita valores negativos o cero
         super().save(*args, **kwargs)
+
+    def stock_bajo(self):
+        return self.cantidad <= 2  # ✅ Retorna True si el stock es bajo
+
 
 class FotoProducto(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)

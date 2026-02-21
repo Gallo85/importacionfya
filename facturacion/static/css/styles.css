@@ -22,3 +22,35 @@
     color: #000; /* Negro */
 }
 
+
+
+/* Estilo para el botón "ver el menu en movil" */
+@media (max-width: 768px) {
+    .sidebar {
+        background: #212529 !important; /* 🔹 Color oscuro asegurado */
+        color: white !important;
+    }
+
+    .sidebar a {
+        color: white !important; /* 🔹 Asegurar visibilidad */
+    }
+
+    .sidebar .nav-link {
+        color: white !important;
+    }
+
+    .sidebar {
+        z-index: 1050 !important; /* 🔹 Mayor que el navbar */
+        position: fixed;
+        top: 0;
+        left: -250px; /* Se oculta por defecto */
+        width: 250px;
+        height: 100vh;
+        overflow-y: auto;
+        transition: left 0.3s ease-in-out;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+}
